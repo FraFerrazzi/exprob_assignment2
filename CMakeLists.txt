@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   message_generation
+  OpenCV
+  aruco
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -66,7 +69,11 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages()
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    actionlib_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##

@@ -109,7 +109,6 @@
         joint_state_controller
         joint1_position_controller
         joint2_position_controller
-        joint3_position_controller
         --shutdown-timeout 3">
   </node>
   
@@ -129,9 +128,11 @@
   <rosparam param="test/random_sense/active"> True </rosparam>
   <rosparam param="test/random_sense/battery_time"> [35.0, 50.0] </rosparam>
   
-  <!-- launch marker_server and marker_client nodes -->
-  <!-- 
+  <!-- launch marker_server node -->
+   
   <node name="marker_server" pkg="exprob_assignment2" type="marker_server" />
+  
+  <!--
   <node name="marker_client" pkg="exprob_assignment2" type="marker_client" />
   -->
   

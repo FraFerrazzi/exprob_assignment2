@@ -138,40 +138,19 @@
   <link name="arm_link1">
      <inertial>
         <mass value="0.025"/>
-  	<origin xyz="0 0 0.25" rpy="0 0 0" />
+  	<origin xyz="0 0 0.35" rpy="0 0 0" />
   	<inertia ixx="0.000010279" ixy="0" ixz="0" iyy="0.000010279" iyz="0" izz="0.000007225"/>
      </inertial>
      <collision>
-        <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        <origin xyz="0 0 0.35" rpy="0 0 0"/>
         <geometry>
-        <box size="0.05 0.05 0.5"/>
+        <box size="0.05 0.05 0.7"/>
         </geometry>
      </collision>
      <visual>
-        <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        <origin xyz="0 0 0.35" rpy="0 0 0"/>
         <geometry>
-        <box size="0.05 0.05 0.5"/>
-        </geometry>
-        <material name="red" />
-     </visual>
-  </link>
-  
-  <link name="arm_link2">
-     <inertial>
-        <mass value="0.025"/>
-  	<origin xyz="0 0 0.25" rpy="0 0 0" />
-  	<inertia ixx="0.000010279" ixy="0" ixz="0" iyy="0.000010279" iyz="0" izz="0.000007225"/>
-     </inertial>
-     <collision>
-        <origin xyz="0 0 0.25" rpy="0 0 0"/>
-        <geometry>
-        <box size="0.05 0.05 0.5"/>
-        </geometry>
-     </collision>
-     <visual>
-        <origin xyz="0 0 0.25" rpy="0 0 0"/>
-        <geometry>
-        <box size="0.05 0.05 0.5"/>
+        <box size="0.05 0.05 0.7"/>
         </geometry>
         <material name="red" />
      </visual>
@@ -188,22 +167,11 @@
         <joint_properties damping="1.0" friction="1.0"/>
   </joint>
   
-  <joint name="arm_joint1" type="revolute">
+  <joint name="arm_joint1" type="fixed">
   	<axis rpy="0 0 0" xyz="0 1 0"/>
   	<origin rpy="0 0 0" xyz="0 0 0.05"/>
   	<parent link="arm_base_link"/>
   	<child link="arm_link1"/>
-  	<limit effort="1000.0" lower="-1.8" upper="1.8" velocity="0.3"/>
-  	<joint_properties damping="1.0" friction="1.0"/>
-  </joint>
-  
-  <joint name="arm_joint2" type="revolute">
-  	<axis rpy="0 0 0" xyz="0 1 0"/>
-  	<origin rpy="0 0 0" xyz="0 0.05 0.45"/>
-  	<parent link="arm_link1"/>
-  	<child link="arm_link2"/>
-  	<limit effort="1000.0" lower="-1.8" upper="1.8" velocity="0.3"/>
-  	<joint_properties damping="1.0" friction="1.0"/>
   </joint>
   
   <!-- Sensors definition -->
@@ -257,11 +225,13 @@
       </inertial>
   </link>
   
-  <joint name="camera_joint" type="fixed">
-	<axis xyz="0 1 0" />
-	<origin xyz="0 0 0.525" rpy="0 0 0"/>
-	<parent link="arm_link2"/>
+  <joint name="camera_joint" type="revolute">
+	<axis rpy="0 0 0" xyz="1 0 0" />
+	<origin xyz="0 0 0.725" rpy="0 0 0"/>
+	<parent link="arm_link1"/>
 	<child link="camera_link"/>
+	<limit effort="10000" lower="-3.14" upper="3.14" velocity="0.6"/>
+        <joint_properties damping="1.0" friction="1.0"/>
   </joint>
   
   <!-- Transission definition -->
@@ -277,9 +247,9 @@
 	</actuator>
   </transmission>
 
-  <transmission name="arm_joint1_trans">
+  <transmission name="camera_joint_trans">
 	<type>transmission_interface/SimpleTransmission</type>
-	<joint name="arm_joint1">
+	<joint name="camera_joint">
 		<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
 	</joint>
 	<actuator name="motor2">
@@ -287,16 +257,5 @@
 		<mechanicalInterface>1</mechanicalInterface>
 	</actuator>
   </transmission>
-   
-  <transmission name="arm_joint2_trans">
-	<type>transmission_interface/SimpleTransmission</type>
-	<joint name="arm_joint2">
-		<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-	</joint>
-	<actuator name="motor3">
-		<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-		<mechanicalInterface>1</mechanicalInterface>
-	</actuator>
-  </transmission> 
 
 </robot>
