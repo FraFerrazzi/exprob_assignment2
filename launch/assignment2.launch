@@ -8,7 +8,7 @@
   <arg name="extra_gazebo_args" default=""/>
   <arg name="gui" default="true"/>
   <arg name="recording" default="false"/>
-  <arg name="world" default="assignment_world" />
+  <arg name="world" default="assignment_world2" />
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <arg name="physics" default="ode"/>
@@ -57,7 +57,7 @@
   
   
    <param name="use_sim_time" value="true"/>
-   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen" >
       <param name="base_frame" value="link_chassis"/>
       <param name="map_update_interval" value="5.0"/>
       <param name="maxUrange" value="16.0"/>
@@ -90,7 +90,7 @@
       <param name="transform_publish_period" value="0.0005"/>
    </node>
    
-   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" >
     <rosparam file="$(find exprob_assignment2)/param/costmap_common_params.yaml" command="load" ns="global_costmap"/>
     <rosparam file="$(find exprob_assignment2)/param/costmap_common_params.yaml" command="load" ns="local_costmap"/>
     <rosparam file="$(find exprob_assignment2)/param/local_costmap_params.yaml" command="load"/>
@@ -112,11 +112,6 @@
         --shutdown-timeout 3">
   </node>
   
-  <!--   
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"> 
-    <remap from="joint_states" to="robot/joint_states"/>
-  </node>  -->
-  
   <!-- Set some ros parameters -->
   <rosparam param="config/environment_size"> [20.0, 15.0] </rosparam>
     
@@ -128,13 +123,11 @@
   <rosparam param="test/random_sense/active"> True </rosparam>
   <rosparam param="test/random_sense/battery_time"> [35.0, 50.0] </rosparam>
   
-  <!-- launch marker_server node -->
-   
+  <!-- launch marker_server node --> 
   <node name="marker_server" pkg="exprob_assignment2" type="marker_server" />
   
-  <!--
-  <node name="marker_client" pkg="exprob_assignment2" type="marker_client" />
-  -->
+  <!-- launch aruco detection node --> 
+  <node name="arcuo_detection" pkg="exprob_assignment2" type="aruco_detection" output="screen" launch-prefix="xterm -e"/>
   
   <!-- launch project nodes -->
   <!-- 
