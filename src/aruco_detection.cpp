@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <algorithm> 
+#include <std_msgs/Bool.h>
 #include <vector>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -28,6 +29,7 @@ private:
     aruco::CameraParameters CamParam;
     double marker_size = 0.05;
     int markers_num = 7;
+    std_msgs::Bool marker_msg;
     
     // Initialize ROS clients, services, publishers and subscribers
     ros::ServiceClient marker_cli_;
@@ -41,13 +43,15 @@ private:
 public:
     ArucoDetector() : it_(nh_) {
     	std::cout << "#######################################\nARUCO DETECTION node correctly launched\n#######################################\n\n"; 
-    	std::cout << "Markers that needs to be detected: 7";
+    	std::cout << "Markers that needs to be detected: " << markers_num;
         img_sub_ = it_.subscribe("/robot/camera1/image_raw", 1, &ArucoDetector::imageCallback, this);
-        //marker_pub_ = nh_.advertise<std_msgs::Int32>("/marker_id");
+        marker_pub_ = nh_.advertise<std_msgs::Bool>("bool_topic", 1);
         marker_cli_ = nh_.serviceClient<exprob_assignment2::RoomInformation>("/room_info");
         
         // Calibrate the camera
 	CamParam = aruco::CameraParameters();
+	// Set the marker message to false to stop the camera motion once all the markers are detected
+	marker_msg.data = false;
 
         // Wait for the service to be available
     	if (!marker_cli_.waitForExistence(ros::Duration(5))) {
@@ -84,6 +88,15 @@ public:
                         for(std::size_t j = 0; j < room_srv_.response.connections.size(); j++){
                             ROS_INFO("Connected to: %s, with door: %s", room_srv_.response.connections.at(j).connected_to.c_str(), room_srv_.response.connections.at(j).through_door.c_str());
                         }
+                    }
+                    // When all the markers will be detected send a message to the move_cam node and
+                    // se the detection_not_done to false to end this program
+                    if (markerIDs.size() == markers_num){
+                        marker_pub_.publish(marker_msg);
+                        ROS_INFO("\n\n\nALL MARKERS HAVE BEEN DETECTED\n\n\nRos shutdown!!\n");
+                        // Wait few seconds to let the user see the output
+                        ros::Duration(3.0).sleep();
+                        detection_not_done = false;
                     }
                 }
 	    } 

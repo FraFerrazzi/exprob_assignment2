@@ -129,6 +129,9 @@
   <!-- launch aruco detection node --> 
   <node name="arcuo_detection" pkg="exprob_assignment2" type="aruco_detection" output="screen" launch-prefix="xterm -e"/>
   
+  <!-- launch move camera node --> 
+  <node name="move_cam" pkg="exprob_assignment2" type="move_cam" output="screen" launch-prefix="xterm -e"/>
+  
   <!-- launch project nodes -->
   <!-- 
   <node pkg="armor" 
