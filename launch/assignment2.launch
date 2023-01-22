@@ -126,11 +126,11 @@
   <!-- launch marker_server node --> 
   <node name="marker_server" pkg="exprob_assignment2" type="marker_server" />
   
+   <!-- launch move camera node --> 
+  <node name="move_cam" pkg="exprob_assignment2" type="move_cam" output="screen" launch-prefix="xterm -e"/>
+  
   <!-- launch aruco detection node --> 
   <node name="arcuo_detection" pkg="exprob_assignment2" type="aruco_detection" output="screen" launch-prefix="xterm -e"/>
-  
-  <!-- launch move camera node --> 
-  <node name="move_cam" pkg="exprob_assignment2" type="move_cam" output="screen" launch-prefix="xterm -e"/>
   
   <!-- launch project nodes -->
   <!-- 

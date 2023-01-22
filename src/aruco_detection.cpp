@@ -10,6 +10,7 @@
 
 #include <exprob_assignment2/RoomInformation.h> 
 #include <exprob_assignment2/RoomConnection.h> 
+#include <exprob_assignment2/ArmInfo.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/aruco.hpp>
@@ -29,12 +30,14 @@ private:
     aruco::CameraParameters CamParam;
     double marker_size = 0.05;
     int markers_num = 7;
-    std_msgs::Bool marker_msg;
+    std_msgs::Bool arm_info_;
     
     // Initialize ROS clients, services, publishers and subscribers
     ros::ServiceClient marker_cli_;
     exprob_assignment2::RoomInformation room_srv_;
-    ros::Publisher marker_pub_;
+    ros::ServiceClient camera_cli_;
+    exprob_assignment2::ArmInfo arm_srv_;
+    //ros::Publisher arm_pub_;
     image_transport::ImageTransport it_;
     image_transport::Subscriber img_sub_;
     
@@ -45,19 +48,22 @@ public:
     	std::cout << "#######################################\nARUCO DETECTION node correctly launched\n#######################################\n\n"; 
     	std::cout << "Markers that needs to be detected: " << markers_num;
         img_sub_ = it_.subscribe("/robot/camera1/image_raw", 1, &ArucoDetector::imageCallback, this);
-        marker_pub_ = nh_.advertise<std_msgs::Bool>("bool_topic", 1);
+        camera_cli_ = nh_.serviceClient<exprob_assignment2::ArmInfo>("/arm_info");
         marker_cli_ = nh_.serviceClient<exprob_assignment2::RoomInformation>("/room_info");
+        //arm_pub_ = nh_.advertise<std_msgs::Bool>("/arm_info", 10);
         
         // Calibrate the camera
 	CamParam = aruco::CameraParameters();
-	// Set the marker message to false to stop the camera motion once all the markers are detected
-	marker_msg.data = false;
-
+	
         // Wait for the service to be available
     	if (!marker_cli_.waitForExistence(ros::Duration(5))) {
         	ROS_ERROR("Service not found");
         	return;
     	}  
+    	if (!camera_cli_.waitForExistence(ros::Duration(5))) {
+        	ROS_ERROR("Service not found");
+        	return;
+    	} 
     }    
     
     void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
@@ -89,17 +95,30 @@ public:
                             ROS_INFO("Connected to: %s, with door: %s", room_srv_.response.connections.at(j).connected_to.c_str(), room_srv_.response.connections.at(j).through_door.c_str());
                         }
                     }
-                    // When all the markers will be detected send a message to the move_cam node and
-                    // se the detection_not_done to false to end this program
-                    if (markerIDs.size() == markers_num){
-                        marker_pub_.publish(marker_msg);
-                        ROS_INFO("\n\n\nALL MARKERS HAVE BEEN DETECTED\n\n\nRos shutdown!!\n");
-                        // Wait few seconds to let the user see the output
-                        ros::Duration(3.0).sleep();
-                        detection_not_done = false;
-                    }
                 }
 	    } 
+        }
+        // When all the markers will be detected send a message to the move_cam node and
+        // se the detection_not_done to false to end this program
+        if (markerIDs.size() == markers_num){
+            arm_srv_.request.done = 1;
+            ROS_INFO("\n\nALL MARKERS HAVE BEEN DETECTED\n");
+	    // Call the service to stop the camera
+	    if (camera_cli_.call(arm_srv_)) {
+		if (arm_srv_.response.success) {
+		    ROS_INFO("Service call succeeded");
+		} else {
+		    ROS_ERROR("Service call failed");
+		}
+            } else {
+		ROS_ERROR("Failed to call service.");
+		return;
+	    }
+            //arm_info_.data = true;
+            //arm_pub_.publish(arm_info_);
+            // Wait few seconds to let the user see the output
+            ros::Duration(2.0).sleep();
+            detection_not_done = false;
         }
     }
 
@@ -108,8 +127,10 @@ public:
 int main(int argc, char **argv) {
     ros::init(argc, argv, "aruco_detection");
     ArucoDetector node;
+    ros::Rate loop_rate(50);
     while(detection_not_done) {
-    	ros::spin();
+    	ros::spinOnce();
+    	loop_rate.sleep();
     }
     return 0;
 }

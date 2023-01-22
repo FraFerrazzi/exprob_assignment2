@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   message_generation
+  std_srvs
   OpenCV
   aruco
   cv_bridge
@@ -62,6 +63,7 @@ add_message_files(
 add_service_files(
    FILES
    RoomInformation.srv
+   ArmInfo.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -88,7 +90,7 @@ generate_messages(
 ##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
 ## * In this file (CMakeLists.txt):
 ##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
+##  find_package(catkin REQUIRED COMPONENTS )
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
 
@@ -142,6 +144,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(marker_server src/marker_server.cpp)
 add_executable(aruco_detection src/aruco_detection.cpp)
+add_executable(move_cam src/move_cam.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +156,7 @@ add_executable(aruco_detection src/aruco_detection.cpp)
 ## same as for the library above
 add_dependencies(marker_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(aruco_detection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(move_cam ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(marker_server
@@ -163,6 +167,10 @@ add_dependencies(aruco_detection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
  target_link_libraries(aruco_detection
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
+ )
+ 
+ target_link_libraries(move_cam
+   ${catkin_LIBRARIES}
  )
 
 #############
