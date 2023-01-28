@@ -49,6 +49,9 @@ PARAM_BATTERY_CHARGE = 'test/random_sense/battery_charge'
 
 # The name of the node representing the shared knowledge required for this scenario.
 NODE_STATE_MACHINE = 'state-machine'
+
+# The name of the service solving the initialization of the world.
+TOPIC_WORLD = '/world_init'
 # ---------------------------------------------------------
 
 

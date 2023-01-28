@@ -11,6 +11,7 @@
 #include <exprob_assignment2/RoomInformation.h> 
 #include <exprob_assignment2/RoomConnection.h> 
 #include <exprob_assignment2/ArmInfo.h>
+#include <exprob_assignment2/WorldInit.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/aruco.hpp>
@@ -30,14 +31,15 @@ private:
     aruco::CameraParameters CamParam;
     double marker_size = 0.05;
     int markers_num = 7;
-    std_msgs::Bool arm_info_;
     
-    // Initialize ROS clients, services, publishers and subscribers
+    // Initialize ROS clients, subscribers and messages
     ros::ServiceClient marker_cli_;
     exprob_assignment2::RoomInformation room_srv_;
     ros::ServiceClient camera_cli_;
     exprob_assignment2::ArmInfo arm_srv_;
-    //ros::Publisher arm_pub_;
+    ros::ServiceClient world_cli_;
+    exprob_assignment2::WorldInit world_srv_;
+    exprob_assignment2::RoomConnection conn;
     image_transport::ImageTransport it_;
     image_transport::Subscriber img_sub_;
     
@@ -50,7 +52,7 @@ public:
         img_sub_ = it_.subscribe("/robot/camera1/image_raw", 1, &ArucoDetector::imageCallback, this);
         camera_cli_ = nh_.serviceClient<exprob_assignment2::ArmInfo>("/arm_info");
         marker_cli_ = nh_.serviceClient<exprob_assignment2::RoomInformation>("/room_info");
-        //arm_pub_ = nh_.advertise<std_msgs::Bool>("/arm_info", 10);
+        world_cli_ = nh_.serviceClient<exprob_assignment2::WorldInit>("/world_init");
         
         // Calibrate the camera
 	CamParam = aruco::CameraParameters();
@@ -61,6 +63,10 @@ public:
         	return;
     	}  
     	if (!camera_cli_.waitForExistence(ros::Duration(5))) {
+        	ROS_ERROR("Service not found");
+        	return;
+    	} 
+    	if (!world_cli_.waitForExistence(ros::Duration(5))) {
         	ROS_ERROR("Service not found");
         	return;
     	} 
@@ -91,8 +97,19 @@ public:
                     room_srv_.request.id = detectedMarkers.at(i).id;
                     if (marker_cli_.call(room_srv_)){
                         ROS_INFO("\n\n##################################\nDETECTED MARKER: %d\nRoom: %s\nCartesian coordinates: (%f,%f)\n", detectedMarkers.at(i).id, room_srv_.response.room.c_str(), room_srv_.response.x, room_srv_.response.y);
+                        // Generate the request to initialize the map
+                        world_srv_.request.room = room_srv_.response.room;
+                        world_srv_.request.x = room_srv_.response.x;
+                        world_srv_.request.y = room_srv_.response.x;
                         for(std::size_t j = 0; j < room_srv_.response.connections.size(); j++){
-                            ROS_INFO("Connected to: %s, with door: %s", room_srv_.response.connections.at(j).connected_to.c_str(), room_srv_.response.connections.at(j).through_door.c_str());
+                            ROS_INFO("Connected to: %s, with door: %s", room_srv_.response.connections.at(j).connected_to.c_str(), room_srv_.response.connections.at(j).through_door.c_str()); 
+                            conn.connected_to = room_srv_.response.connections.at(j).connected_to;
+                            conn.through_door = room_srv_.response.connections.at(j).through_door;
+                            world_srv_.request.connections.push_back(conn);
+                        }
+                        // Call the service
+                        if (world_cli_.call(world_srv_)){
+                        	ROS_INFO("\nThese informations have been sent to build the map knowledge");
                         }
                     }
                 }
@@ -114,8 +131,6 @@ public:
 		ROS_ERROR("Failed to call service.");
 		return;
 	    }
-            //arm_info_.data = true;
-            //arm_pub_.publish(arm_info_);
             // Wait few seconds to let the user see the output
             ros::Duration(2.0).sleep();
             detection_not_done = false;

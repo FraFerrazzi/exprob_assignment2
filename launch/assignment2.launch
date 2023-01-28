@@ -133,38 +133,37 @@
   <node name="arcuo_detection" pkg="exprob_assignment2" type="aruco_detection" output="screen" launch-prefix="xterm -e"/>
   
   <!-- launch project nodes -->
-  <!-- 
   <node pkg="armor" 
         type="execute"
         name="armor_service" 
         args="it.emarolab.armor.ARMORMainService"/>
     
-  <node pkg = "exprob_assignment1"  
+  <node pkg = "exprob_assignment2"  
         type = "state_machine.py" 
         name = "state_machine"
+        launch-prefix="xterm -e"
         output = "screen"
   > </node>
     
-  <node pkg = "exprob_assignment1"  
+  <node pkg = "exprob_assignment2"  
         type = "planner.py"
         name = "planner"
         launch-prefix="xterm -e"
         output = "screen"
   > </node>
     
-  <node pkg = "exprob_assignment1"  
+  <node pkg = "exprob_assignment2"  
         type = "controller.py"
         name = "controller"
         launch-prefix="xterm -e"
         output = "screen"
   > </node>
     
-  <node pkg = "exprob_assignment1"  
+  <node pkg = "exprob_assignment2"  
         type = "robot_battery_state.py"
         name = "robot_battery_state"
         launch-prefix="xterm -e"
         output = "screen"
   > </node>
-  -->
 
 </launch>

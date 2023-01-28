@@ -17,13 +17,13 @@ Action service:
 import random
 import rospy
 # Import constant name defined to structure the architecture.
-from exprob_assignment1 import architecture_name_mapper as anm
+from exprob_assignment2 import architecture_name_mapper as anm
 # Import the ActionServer implementation used.
 from actionlib import SimpleActionServer
 # Import custom message, actions and services.
-from exprob_assignment1.msg import ControlFeedback, ControlResult
-from exprob_assignment1.srv import SetPose
-import exprob_assignment1  # This is required to pass the `PlanAction` type for instantiating the `SimpleActionServer`.
+from exprob_assignment2.msg import ControlFeedback, ControlResult
+from exprob_assignment2.srv import SetPose
+import exprob_assignment2  # This is required to pass the `PlanAction` type for instantiating the `SimpleActionServer`.
 
 # A tag for identifying logs producer.
 LOG_TAG = anm.NODE_CONTROLLER

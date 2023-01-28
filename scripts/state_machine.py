@@ -36,10 +36,10 @@ from std_msgs.msg import String, Float64, Bool, Float32
 # Import the class that decouples the interface of the Finite State Machine with
 # the other  nodes of the architecture from the actual implementation of the
 # Finite State Machine, which is available in this file.
-from exprob_assignment1.state_machine_helper import Helper
+from exprob_assignment2.state_machine_helper import Helper
 
 # Import constant name defined to structure the architecture.
-from exprob_assignment1 import architecture_name_mapper as anm
+from exprob_assignment2 import architecture_name_mapper as anm
 
 # The list of names that identify the states of the Finite State Machine.
 STATE_CHARGE = 'CHARGE'              # State where the robot recharges its battery.

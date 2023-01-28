@@ -30,7 +30,7 @@ import rospy
 import time
 
 # Import constant name defined to structure the architecture.
-from exprob_assignment1 import architecture_name_mapper as anm
+from exprob_assignment2 import architecture_name_mapper as anm
 
 # Import the messages used by services and publishers.
 from std_msgs.msg import Bool

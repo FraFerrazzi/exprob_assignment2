@@ -19,12 +19,12 @@ Action Service:
 import random
 import rospy
 # Import constant name defined to structure the architecture.
-from exprob_assignment1 import architecture_name_mapper as anm
+from exprob_assignment2 import architecture_name_mapper as anm
 # Import the ActionServer implementation used.
 from actionlib import SimpleActionServer
 # Import custom message, actions and services.
-from exprob_assignment1.msg import Point, PlanFeedback, PlanResult
-from exprob_assignment1.srv import GetPose
+from exprob_assignment2.msg import Point, PlanFeedback, PlanResult
+from exprob_assignment2.srv import GetPose
 import exprob_assignment1  # This is required to pass the `PlanAction` type for instantiating the `SimpleActionServer`.
 
 

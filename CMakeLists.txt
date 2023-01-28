@@ -64,6 +64,7 @@ add_service_files(
    FILES
    RoomInformation.srv
    ArmInfo.srv
+   WorldInit.srv
  )
 
 ## Generate actions in the 'action' folder
