@@ -1,21 +1,14 @@
 #!/usr/bin/env python
 import rospy
 
-# The name of the parameter to define the environment size.
-# It should be a list `[max_x, max_y]` such that x:[0, `max_x`) and y:[0, `max_y`).
-PARAM_ENVIRONMENT_SIZE = 'config/environment_size'
-
 # Define the location in which the robot starts
 INIT_LOCATION = 'E'
 
 # Define the location in which the robot goes to recharge itself.
 CHARGE_LOCATION = 'E'
 
-# Define the starting points in which the robot starts
-INIT_POINT = [0.0, 0.0]
-
-# Initialize and define the size of the environment 
-ENVIRONMENT_SIZE = [20, 15]
+# Define the number of markers that needs to be detected
+MARKERS_NUMBER = 7
 
 # The boolean parameter to active random testing.
 # If the value is `False` a keyboard-based interface will be used to produce stimulus 
@@ -35,6 +28,9 @@ TOPIC_BATTERY_LOW = 'state/battery_low'
 # The name of the service solving the recharge of the robot.
 TOPIC_RECHARGE = 'state/recharge'
 
+# The name of the service to use the MoveBase action service
+ACTION_MOTION = '/move_base'
+
 # The delay for the battery to become low, i.e., from high to low.
 # It should be a list `[min_time, max_time]`, and the battery level change
 # will occur after a random number of seconds within such an interval.
@@ -53,37 +49,6 @@ NODE_STATE_MACHINE = 'state-machine'
 # The name of the service solving the initialization of the world.
 TOPIC_WORLD = '/world_init'
 # ---------------------------------------------------------
-
-
-# The name of the planner node.
-NODE_PLANNER = 'planner'
-
-# The name of the action server solving the motion planning problem.
-ACTION_PLANNER = 'motion/planner'
-
-# Defines the number of points in the plan. It is a list where the number of points
-# is a random value in the interval [`min_n`, `max_n`).
-PARAM_PLANNER_POINTS = 'test/random_plan_points'
-
-# The delay between the computation of the next via points.
-# It should be a list `[min_time, max_time]`, and the computation will 
-# last for a random number of seconds in such an interval.
-PARAM_PLANNER_TIME = 'test/random_plan_time'
-# -------------------------------------------------
-
-
-# The name of the controller node.
-NODE_CONTROLLER = 'controller'
-
-# The name of the action server solving the motion control problem.
-ACTION_CONTROLLER = 'motion/controller'
-
-# The time required to reach a via point given by the planner.
-# It is a list `[min_time, max_time]`, and the time to reach a
-# via point will be a random number of seconds in such an interval.
-PARAM_CONTROLLER_TIME = 'test/random_motion_time'
-# -------------------------------------------------
-
 
 # Function used to label each log with a producer tag.
 def tag_log(msg, producer_tag):

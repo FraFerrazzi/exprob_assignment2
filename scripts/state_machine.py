@@ -45,18 +45,16 @@ from exprob_assignment2 import architecture_name_mapper as anm
 STATE_CHARGE = 'CHARGE'              # State where the robot recharges its battery.
 STATE_BUILD_WORLD = 'BUILDWORLD'     # State where the environment is build using the ontology.
 STATE_REASONER = 'REASONER'          # State that decides the next action done by the robot.
-STATE_PLANNER = 'PLANNER'            # State that generates randomic via points to simulate a planning algorithm.
-STATE_CONTROLLER = 'CONTROLLER'      # State that follows the randomic via points arriving to the target location to simulate a controller.
+STATE_MOTION = 'MOTION'              # State that allows the robot to move in the environement according to a plan algorithm.
 STATE_REACH_CHARGE = 'REACHCHARGE'   # State used to let the robot reach the charging station.
 STATE_SURVEILLANCE = 'SURVEILLANCE'  # State that checks the location in which the root stops.
 
 
 # The list of names that identify the transitions of the Finite State Machine.
-TRANS_BATTERY_LOW = 'battery_low'      # The transition from the inner Finite State Machine associated with the `REASONER`, 'PLANNER' and `CONTRLLER` states toward the `REACHCHARGE` state.
+TRANS_BATTERY_LOW = 'battery_low'      # The transition from the inner Finite State Machine associated with the `REASONER` and 'MOTION' states toward the `REACHCHARGE` state.
 TRANS_BATTERY_OK = 'battery_ok'        # The transition from the `CHARGE` state to the inner Finite State Machine associated with the `REASONER` state.
-TRANS_CHECK_LOC = 'check_loc'          # The transition from the `CONTROLLER` state to the `SURVEILLANCE` state.
-TRANS_INFO_DONE = 'info_done'          # The transition from the `REASONER` state to the `PLANNER` state.
-TRANS_PLAN_OK = 'plan_ok'              # The transition from the `PLANNER` state to the 'CONTROLLER' state.
+TRANS_CHECK_LOC = 'check_loc'          # The transition from the `MOTION` state to the `SURVEILLANCE` state.
+TRANS_INFO_DONE = 'info_done'          # The transition from the `REASONER` state to the `MOTION` state.
 TRANS_WORLD_DONE = 'world_done'        # The transition from the `BUILDWORLD` state with to the 'REASONER' state.
 TRANS_CHARGE_ON = 'charge_on'          # The transition from the 'REACHCHARGE' state toward the `CAHRGE` state.
 TRANS_CHECK_DONE = 'check_done'        # The transition from the 'SURVEILLANCE' state toward the `REASONER` state.
@@ -82,7 +80,7 @@ class BuildWorld(smach.State):
 			helper: instance of the class Helper() allocated in state_machine_helper.py`
 
 		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
+		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
 		self._helper = helper
 								 
 	def execute(self, userdata):
@@ -127,7 +125,7 @@ class Charge(smach.State):
 			helper: instance of the class Helper() allocated in state_machine_helper.py`
 
 		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
+		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
 		self._helper = helper
 
 	def execute(self, userdata):
@@ -171,7 +169,7 @@ class ReachCharge(smach.State):
 			helper: instance of the class Helper() allocated in state_machine_helper.py`
 
 		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
+		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
 		self._helper = helper
 			
 	def execute(self, userdata):
@@ -216,7 +214,7 @@ class Reasoner(smach.State):
 			helper: instance of the class Helper() allocated in state_machine_helper.py`
 
 		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
+		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
 		self._helper = helper
 			
 	def execute(self, userdata):
@@ -225,7 +223,7 @@ class Reasoner(smach.State):
 		reason in order to achieve the wanted behavior for the surveillance robot, by calling the
 		method reason() defined in the helper node. When the robot finishes to query the ontology, 
 		the power level of the battery is checked. If the battery is low, the next 
-		state to be executed will be REACHCHARGE, else it will be executed the PLANNER state.
+		state to be executed will be REACHCHARGE, else it will be executed the MOTION state.
 		
 		Args:
 			self: instance of the current class.
@@ -233,7 +231,7 @@ class Reasoner(smach.State):
 
 		Returns:
 			TRANS_BATTERY_LOW: is the transition to go from the REASONER state to the REACHCHARGE state.
-			TRANS_INFO_DONE: is the transition to go from the REASONER state to the PLANNER state.
+			TRANS_INFO_DONE: is the transition to go from the REASONER state to the MOTION state.
 		
 		"""
 		log_msg = f'\n\n############ Executing state REASONER ############\n'
@@ -254,44 +252,38 @@ class Reasoner(smach.State):
 
 
 
-class Planner(smach.State):
+class Motion(smach.State):
 	""" 
-	Class that defines the state: PLANNER.
+	Class that defines the state: MOTION.
 		
 
 	"""
 	def __init__(self, helper):
 		""" 
-		Function that initializes the state PLANNER.
+		Function that initializes the state MOTION.
 		
 		Args:
 			self: instance of the current class.
 			helper: instance of the class Helper() allocated in state_machine_helper.py`
 
 		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
+		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
 		self._helper = helper 
 			
 	def execute(self, userdata):
 		""" 
-		Function which is executed before exiting the state PLANNER. This method is a pseudo 
-		planner which scope is to generate a random path defined by via points for reaching the 
-		next location. This is done to waste time and simulate the behavior of a dummy planner. 
-		The behavior is achieved by calling the method planner() implemented in the helper node. 
-		At this point, the power level of the battery is checked.
-		If the battery is low, the next state to be executed will be REACHCHARGE, else it will be
-		executed the CONTROLLER state.
+		Function which is executed before exiting the state MOTION. 
 		
 		Args:
 			self: instance of the current class.
 			userdata: shared variable between the states of the Final State Machine
 
 		Returns:
-			TRANS_BATTERY_LOW: is the transition to go from the PLANNER state to the REACHCHARGE state.
-			TRANS_PLAN_OK: is the transition to go from the PLANNER state to the CONTROLLER state.
+			TRANS_BATTERY_LOW: is the transition to go from the MOTION state to the REACHCHARGE state.
+			TRANS_CHECK_LOC: is the transition to go from the MOTION state to the SURVEILLANCE state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state PLANNER ############\n'
+		log_msg = f'\n\n############ Executing state MOTION ############\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.planner()
 		while not rospy.is_shutdown():
@@ -302,61 +294,6 @@ class Planner(smach.State):
 					self._helper.planner_cli.cancel_all_goals()
 					return TRANS_BATTERY_LOW
 				if self._helper.plan_done():
-					return TRANS_PLAN_OK
-			finally:
-				self._helper.mutex.release()
-
-			
-			
-class Controller(smach.State):
-	""" 
-	Class that defines the state: CONTROLLER.
-		
-
-	"""
-	def __init__(self, helper):
-		""" 
-		Method that initializes the state CONTROLLER.
-		
-		Args:
-			self: instance of the current class.
-			helper: instance of the class Helper() allocated in state_machine_helper.py`
-
-		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
-		self._helper = helper 
-		
-	def execute(self, userdata):
-		""" 
-		Method which is executed before exiting the state CONTROLLER. This method is a pseudo
-		controller which scope is to let the robot follow the via points generated by the planner 
-		until it reaches the final destination. This is done by calling the method controller() 
-		implemented in the helper node. This method wastes time and simulates the behavior of a 
-		dummy controller.
-		At this point, the power level of the battery is checked.
-		If the battery is low, the next state to be executed will be REACHCHARGE, else it will be
-		executed the SURVEILLANCE state.
-		
-		Args:
-			self: instance of the current class.
-			userdata: shared variable between the states of the Final State Machine
-
-		Returns:
-			TRANS_BATTERY_LOW: is the transition to go from the CONTROLLER state to the REACHCHARGE state.
-			TRANS_CHECK_LOC: is the transition to go from the CONTROLLER state to the SURVEILLANCE state.
-			
-		"""
-		log_msg = f'\n\n############ Executing state CONTROLLER ############\n'
-		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-		self._helper.controller()
-		while not rospy.is_shutdown():
-			self._helper.mutex.acquire()
-			try:
-				self._helper.check_controller()
-				if self._helper.ret_battery_low():
-					self._helper.controller_cli.cancel_all_goals()
-					return TRANS_BATTERY_LOW
-				if self._helper.control_done():
 					return TRANS_CHECK_LOC
 			finally:
 				self._helper.mutex.release()
@@ -378,7 +315,7 @@ class Surveillance(smach.State):
 			helper: instance of the class Helper() allocated in state_machine_helper.py`
 
 		"""
-		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_PLAN_OK, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
+		smach.State.__init__(self, outcomes = [TRANS_BATTERY_LOW, TRANS_BATTERY_OK, TRANS_CHECK_LOC, TRANS_INFO_DONE, TRANS_WORLD_DONE, TRANS_CHARGE_ON, TRANS_CHECK_DONE])
 		self._helper = helper 
 		
 	def execute(self, userdata):
@@ -439,7 +376,6 @@ def main():
 								     TRANS_BATTERY_OK:STATE_BUILD_WORLD,
 								     TRANS_CHECK_LOC:STATE_BUILD_WORLD,
 								     TRANS_INFO_DONE:STATE_BUILD_WORLD,
-								     TRANS_PLAN_OK:STATE_BUILD_WORLD,
 								     TRANS_WORLD_DONE:STATE_REASONER,
 								     TRANS_CHECK_DONE:STATE_BUILD_WORLD})
 																										
@@ -449,7 +385,6 @@ def main():
 								     TRANS_BATTERY_OK:STATE_REASONER,
 								     TRANS_CHECK_LOC:STATE_CHARGE,
 							             TRANS_INFO_DONE:STATE_CHARGE,
-								     TRANS_PLAN_OK:STATE_CHARGE,
 								     TRANS_WORLD_DONE:STATE_CHARGE,
 								     TRANS_CHECK_DONE:STATE_CHARGE})
 													
@@ -458,30 +393,18 @@ def main():
 								     TRANS_CHARGE_ON:STATE_REASONER, 
 								     TRANS_BATTERY_OK:STATE_REASONER,
 								     TRANS_CHECK_LOC:STATE_REASONER,
-								     TRANS_INFO_DONE:STATE_PLANNER,
-								     TRANS_PLAN_OK:STATE_REASONER,
+								     TRANS_INFO_DONE:STATE_MOTION,
 								     TRANS_WORLD_DONE:STATE_REASONER,
 								     TRANS_CHECK_DONE:STATE_REASONER})
 													
-		smach.StateMachine.add(STATE_PLANNER, Planner(helper), 
+		smach.StateMachine.add(STATE_MOTION, Motion(helper), 
 							transitions={TRANS_BATTERY_LOW:STATE_REACH_CHARGE, 
-								     TRANS_CHARGE_ON:STATE_PLANNER,
-							             TRANS_BATTERY_OK:STATE_PLANNER,
-								     TRANS_CHECK_LOC:STATE_PLANNER,
-								     TRANS_INFO_DONE:STATE_PLANNER,
-								     TRANS_PLAN_OK:STATE_CONTROLLER,
-								     TRANS_WORLD_DONE:STATE_PLANNER,
-								     TRANS_CHECK_DONE:STATE_PLANNER})
-													
-		smach.StateMachine.add(STATE_CONTROLLER, Controller(helper), 
-							transitions={TRANS_BATTERY_LOW:STATE_REACH_CHARGE, 
-								     TRANS_CHARGE_ON:STATE_CONTROLLER,
-								     TRANS_BATTERY_OK:STATE_CONTROLLER,
+								     TRANS_CHARGE_ON:STATE_MOTION,
+							             TRANS_BATTERY_OK:STATE_MOTION,
 								     TRANS_CHECK_LOC:STATE_SURVEILLANCE,
-								     TRANS_INFO_DONE:STATE_CONTROLLER,
-								     TRANS_PLAN_OK:STATE_CONTROLLER,
-								     TRANS_WORLD_DONE:STATE_CONTROLLER,
-								     TRANS_CHECK_DONE:STATE_CONTROLLER})
+								     TRANS_INFO_DONE:STATE_MOTION,
+								     TRANS_WORLD_DONE:STATE_MOTION,
+								     TRANS_CHECK_DONE:STATE_MOTION})
 													
 		smach.StateMachine.add(STATE_REACH_CHARGE, ReachCharge(helper), 
 							transitions={TRANS_BATTERY_LOW:STATE_REACH_CHARGE, 
@@ -489,7 +412,6 @@ def main():
 								     TRANS_BATTERY_OK:STATE_REACH_CHARGE,
 								     TRANS_CHECK_LOC:STATE_REACH_CHARGE,
 								     TRANS_INFO_DONE:STATE_REACH_CHARGE,
-								     TRANS_PLAN_OK:STATE_REACH_CHARGE,
 								     TRANS_WORLD_DONE:STATE_REACH_CHARGE,
 								     TRANS_CHECK_DONE:STATE_REACH_CHARGE})
 										
@@ -499,7 +421,6 @@ def main():
 								     TRANS_BATTERY_OK:STATE_SURVEILLANCE,
 								     TRANS_CHECK_LOC:STATE_SURVEILLANCE,
 								     TRANS_INFO_DONE:STATE_SURVEILLANCE,
-								     TRANS_PLAN_OK:STATE_SURVEILLANCE,
 								     TRANS_WORLD_DONE:STATE_SURVEILLANCE,
 								     TRANS_CHECK_DONE:STATE_REASONER})
 										  

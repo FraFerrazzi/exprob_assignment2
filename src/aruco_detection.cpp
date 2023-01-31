@@ -53,6 +53,8 @@ public:
         camera_cli_ = nh_.serviceClient<exprob_assignment2::ArmInfo>("/arm_info");
         marker_cli_ = nh_.serviceClient<exprob_assignment2::RoomInformation>("/room_info");
         world_cli_ = nh_.serviceClient<exprob_assignment2::WorldInit>("/world_init");
+        // Wait every node to be launched correctly before acquiring images
+        ros::Duration(3).sleep();
         
         // Calibrate the camera
 	CamParam = aruco::CameraParameters();
@@ -100,7 +102,7 @@ public:
                         // Generate the request to initialize the map
                         world_srv_.request.room = room_srv_.response.room;
                         world_srv_.request.x = room_srv_.response.x;
-                        world_srv_.request.y = room_srv_.response.x;
+                        world_srv_.request.y = room_srv_.response.y;
                         for(std::size_t j = 0; j < room_srv_.response.connections.size(); j++){
                             ROS_INFO("Connected to: %s, with door: %s", room_srv_.response.connections.at(j).connected_to.c_str(), room_srv_.response.connections.at(j).through_door.c_str()); 
                             conn.connected_to = room_srv_.response.connections.at(j).connected_to;
@@ -132,7 +134,6 @@ public:
 		return;
 	    }
             // Wait few seconds to let the user see the output
-            ros::Duration(2.0).sleep();
             detection_not_done = false;
         }
     }

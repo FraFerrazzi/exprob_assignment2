@@ -15,7 +15,6 @@ private:
     ros::Publisher move_cam_pub;
     ros::Publisher move_base_pub;
     ros::ServiceServer motion_srv;
-    //ros::Subscriber motion_sub_;
     // Variables initialization
     std_msgs::Float64 joint1_pos;
     std_msgs::Float64 joint2_pos;
@@ -31,7 +30,6 @@ public:
         move_cam_pub = nh_.advertise<std_msgs::Float64>("/robot/joint2_position_controller/command", 10);
         move_base_pub = nh_.advertise<std_msgs::Float64>("/robot/joint1_position_controller/command", 10);
         motion_srv = nh_.advertiseService("/arm_info", &MoveJoint::motionCallback, this); 
-        //motion_sub_ = nh_.subscribe("/arm_info", 10, &MoveJoint::motionCallback, this);
         ROS_INFO("Move the arm until markers have been detected!\n");
         while(move_arm){
             rotate_camera_joint(move_cam_pub);
@@ -127,21 +125,9 @@ public:
         res.success = 1;
         ROS_INFO("ROS Shutdown\n");
         // Wait few seconds to let the user see the output
-        ros::Duration(2.0).sleep();
         detection_done = true;
         return true;
     }
-    
-    //void motionCallback(const std_msgs::BoolConstPtr& msg) {
-    	//move_arm = false;
-        //ROS_INFO("ALL THE MARKERS HAVE BEEN DETECTED\n\nArm is going to home position!\n");
-        //move_to_surv_pos(move_base_pub, move_cam_pub);
-        //ROS_INFO("ROS Shutdown\n");
-        // Wait few seconds to let the user see the output
-        //ros::Duration(3.0).sleep();
-        //detection_done = true;
-    //}
-
 };
 
 int main(int argc, char **argv) {
