@@ -64,7 +64,6 @@ TRANS_CHECK_DONE = 'check_done'        # The transition from the 'SURVEILLANCE' 
 LOG_TAG = anm.NODE_STATE_MACHINE										  
 
 
-
 class BuildWorld(smach.State):
 	""" 
 	Class that defines the state: BUILDWORLD.
@@ -99,6 +98,11 @@ class BuildWorld(smach.State):
 		"""
 		log_msg = f'\n\n############ Executing state BUILD WORLD ############\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG)) 
+		r = rospy.Rate(10)
+		while not self._helper.aruco_done():
+			# Wait until all arucos have been detected before building the world
+			r.sleep()
+		# Build the world once the markers have been detected
 		self._helper.build_environment()     
 		while not rospy.is_shutdown():
 			self._helper.mutex.acquire()
@@ -243,7 +247,7 @@ class Reasoner(smach.State):
 			self._helper.mutex.acquire()
 			try:
 				if self._helper.ret_battery_low():
-					# may cancel goals
+					self._helper.cancel_motion()
 					return TRANS_BATTERY_LOW
 				if self._helper.reason_done():
 					return TRANS_INFO_DONE
@@ -285,15 +289,15 @@ class Motion(smach.State):
 		"""
 		log_msg = f'\n\n############ Executing state MOTION ############\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-		self._helper.planner()
+		self._helper.go_to_goal()
 		while not rospy.is_shutdown():
 			self._helper.mutex.acquire()
 			try:
-				self._helper.check_planner()
+				self._helper.check_motion()
 				if self._helper.ret_battery_low():
-					self._helper.planner_cli.cancel_all_goals()
+					self._helper.cancel_motion()
 					return TRANS_BATTERY_LOW
-				if self._helper.plan_done():
+				if self._helper.motion_done():
 					return TRANS_CHECK_LOC
 			finally:
 				self._helper.mutex.release()
@@ -342,7 +346,7 @@ class Surveillance(smach.State):
 			self._helper.mutex.acquire()
 			try:
 				if self._helper.ret_battery_low():
-					self._helper.controller_cli.cancel_all_goals()
+					self._helper.cancel_motion()
 					return TRANS_BATTERY_LOW
 				if self._helper.surveillance_done():
 					return TRANS_CHECK_DONE
@@ -364,7 +368,7 @@ def main():
 	helper = Helper()
 	
 	# Create a SMACH state machine
-	sm = smach.StateMachine(outcomes=['container_interface'])
+	sm = smach.StateMachine(outcomes=['container_interface_surv'])
 	sm.userdata.sm_counter = 0
 
 	# Open the container
@@ -425,7 +429,7 @@ def main():
 								     TRANS_CHECK_DONE:STATE_REASONER})
 										  
 	# Create and start the introspection server for visualization
-	sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
+	sis = smach_ros.IntrospectionServer('server_surv', sm, '/SM_ROOT_SURV')
 	sis.start()
 
 	# Execute the state machine
