@@ -34,6 +34,7 @@ import sys
 import actionlib
 import actionlib.msg
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from geometry_msgs.msg import Twist
 from threading import Lock
 from actionlib import SimpleActionClient
 
@@ -183,6 +184,9 @@ class Helper:
 		# Publisher to move rotate the camera for surveillance action
 		self.pub_base_joint = rospy.Publisher(anm.TOPIC_JOINT_BASE, Float64, queue_size = 10)
 		
+		# Publisher to make the robot explore the initial room
+		self.twist_pub = rospy.Publisher(anm.TOPIC_TWIST, Twist, queue_size = 10)
+		
 		# Initialize and define the server to build the map
 		self.world_srv = rospy.Service(anm.TOPIC_WORLD, WorldInit, self.handle_world_init)
 		
@@ -274,15 +278,22 @@ class Helper:
 		# Get a time in the past (before the timestamp of the robot)
 		self.timer_now = str(int(1000000000)) # This is done to make every room URGENT at the beginning  
 		# Start the timestamp in every location to retrieve when a location becomes urgent
-		for g in rooms_number:
-			ARGS = ['visitedAt', self._rooms[g], 'Long', self.timer_now]
+		for i in rooms_number:
+			ARGS = ['visitedAt', self._rooms[i], 'Long', self.timer_now]
 			ontology_manager('ADD', 'DATAPROP', 'IND', ARGS)
+			# Reason about the ontology to assign the timestamp
+			ARGS = ['']
+			ontology_manager('REASON', '', '', ARGS)
+			ARGS = ['visitedAt', self._rooms[i]]
+			last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
+			last_location = ontology_format(last_location, 1, 11) 
+			print('Room:', self._rooms[i], '<#>  Init timestamp:', last_location, '\n')
 		# Update the timestamp of corridor 'E' since the robot spawns in it
-		ARGS = ['']
-		ontology_manager('REASON', '', '', ARGS)
-		ARGS = ['visitedAt', self.charge_loc]
-		last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
-		last_location = ontology_format(last_location, 1, 11) 
+		#ARGS = ['']
+		#ontology_manager('REASON', '', '', ARGS)
+		#ARGS = ['visitedAt', self.charge_loc]
+		#last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
+		#last_location = ontology_format(last_location, 1, 11) 
 		self.timer_now = str(int(time.time())) # initial location is not urgent
 		ARGS = ['visitedAt', self.charge_loc, 'Long', self.timer_now, last_location[0]]
 		ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
@@ -291,7 +302,32 @@ class Helper:
 		#ontology_manager('SAVE', '', '', ARGS) # <--- uncomment this line for ontology debug
 		log_msg = f'The map has been generated in the ontology\n\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+		# Before continuing make the robot rotate on itself to understand the sorroundings
+		self.explore_init_room() 
 		self.map_completed = True   # Set to True only the one involved in the state
+		
+		
+	def explore_init_room(self):
+		cmd = Twist()
+		# No linear motion
+		cmd.linear.x = 0
+		cmd.linear.y = 0
+		cmd.linear.z = 0
+		# Rotate on itself
+		cmd.angular.x = 0
+		cmd.angular.y = 0
+		cmd.angular.z = -1.6
+		# start the timer
+		start_time = rospy.get_time()
+		log_msg = f'Rotate around a bit to explore!\n\n'
+		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+		# Run the loop for six seconds to allow the ROBOT to undertand its sorroundings
+		while rospy.get_time() - start_time < 9:
+			self.twist_pub.publish(cmd)
+			self.rate.sleep()
+		# Stop rotation
+		cmd.angular.z = 0
+		self.twist_pub.publish(cmd)
 		
 		
 	def world_done(self):
@@ -367,19 +403,19 @@ class Helper:
 			if len(possible_corridor) == 0:
 				log_msg = f'There are no reachable corridors'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-				self.next_goal = can_reach # take the first randomic reachable room
+				self._next_goal = can_reach # take the first randomic reachable room
 			else:
 				log_msg = f'The reachable corridors are:\n {possible_corridor}'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-				self.next_goal = possible_corridor # take the first reachable corridor
+				self._next_goal = possible_corridor # take the first reachable corridor
 		else:
 			log_msg = f'The Urgent locations are:\n {urgent_loc}'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			self.next_goal = urgent_loc # take the first randomic urgent room
-		if type(self.next_goal) == list:
-			self.next_goal = self.next_goal[0]
+			self._next_goal = urgent_loc # take the first randomic urgent room
+		if type(self._next_goal) == list:
+			self._next_goal = self._next_goal[0]
 		self.reasoner_done = True   # Set to True only the one involved in the state
-		return self.next_goal
+		return self._next_goal
 		
 		
 	def reason_done(self):
@@ -415,7 +451,7 @@ class Helper:
 		# Reset the boolean variables
 		self.reset_var()
 		# Set the next location to be the charging station
-		self.next_goal = self.charge_loc
+		self._next_goal = self.charge_loc
 		log_msg = f'Battery of the robot low!\nThe ROBOT is going to the charging station'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.go_to_goal()
@@ -423,8 +459,6 @@ class Helper:
 			self.rate.sleep() # Wate time
 		log_msg = f'The ROBOT arrived at the charging station'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-		# Get the waypoints that will be used in the Controller
-		#self._viapoints = (self.planner_cli.get_result()).via_points
 		self.charge_reached = True   # Set to True only the one involved in the state
 		
 		
@@ -517,7 +551,7 @@ class Helper:
 		self.reset_var()
 		# Get the goal and its coordinates
 		try:
-			room_index = self._rooms.index(self.next_goal)
+			room_index = self._rooms.index(self._next_goal)
 		except:
 			log_msg = f'The Goal cannot be found\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
@@ -546,8 +580,8 @@ class Helper:
 		
 		"""
 		# Execute only when the plan action service is done
-		if self.move_cli.get_state() == DONE:
-			log_msg = f'The ROBOT has arrived to its destination'
+		if self.move_cli.get_state() == DONE and self.battery_low == False:
+			log_msg = f'The ROBOT has arrived to the destination'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			# Update the position of the ROBOT in the ontology
 			ARGS = ['isIn', 'Robot1', self._next_goal, self._prev_goal]
@@ -563,18 +597,17 @@ class Helper:
 			# Retreive the last time a specific location has been visited
 			ARGS = ['visitedAt', self._next_goal]
 			last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
-			print(last_location)
 			last_location = ontology_format(last_location, 1, 11) 
-			print(last_location)
 			# Update the time
 			self.timer_now = str(int(time.time())) 
 			# Update the timestamp since the robot moved
 			ARGS = ['now', 'Robot1', 'Long', self.timer_now, last_motion[0]]
 			ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
-			print('1')
 			# Update the timestamp since the robot visited the location
 			ARGS = ['visitedAt', self._next_goal, 'Long', self.timer_now, last_location[0]]
 			ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
+			# Cancel the goal to be sure
+			self.cancel_motion()
 			self.motion_completed = True  # Set to True only the one involved in the state
 	
 		
@@ -603,11 +636,11 @@ class Helper:
 			self: instance of the current class.
 		
 		"""
-		# Reset the boolean variables
-		self.reset_var()
 		log_msg = f'Cancel the previous goal\n\n'
+		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Cancel the goal
 		self.move_cli.cancel_all_goals()
+		rospy.sleep(1)
 				
 				
 	def reset_var(self):
@@ -640,7 +673,7 @@ class Helper:
 		# Reset the boolean variables
 		self.reset_var()
 		# Surveillance task
-		log_msg = f'The ROBOT starts surveilling room: {self.next_goal}\n'
+		log_msg = f'The ROBOT starts surveilling room: {self._next_goal}\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		joint_angle = 0
 		while self.battery_low == False and joint_angle <= 3.1: # If bettery low there won't be surveillance task
@@ -652,7 +685,7 @@ class Helper:
 		joint_angle = 0
 		self.pub_base_joint.publish(joint_angle)
 		if self.battery_low == False:
-			log_msg = f'The robot checked location: {self.next_goal}\n\n'
+			log_msg = f'The robot checked location: {self._next_goal}\n\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.check_completed = True  # Set to True only the one involved in the state
 		else:

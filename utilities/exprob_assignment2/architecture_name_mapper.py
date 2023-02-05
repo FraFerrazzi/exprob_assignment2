@@ -22,8 +22,11 @@ PARAM_RANDOM_ACTIVE = 'test/random_sense/active'
 # The name of the node representing the shared knowledge required for this scenario.
 NODE_ROBOT_BATTERY_STATE = 'robot-battery-state'
 
-# The namen of the topic where the joint base command is published
+# The name of the topic where the joint base command is published
 TOPIC_JOINT_BASE = '/robot/joint1_position_controller/command'
+
+# The name of the topic where to make the robot move in the initial room
+TOPIC_TWIST = '/cmd_vel'
 
 # The name of the topic where the battery state is published.
 TOPIC_BATTERY_LOW = 'state/battery_low'

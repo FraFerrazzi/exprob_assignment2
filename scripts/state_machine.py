@@ -146,7 +146,8 @@ class Charge(smach.State):
 			TRANS_BATTERY_OK: is the transition to go from the CHARGE state to the REASONER state.
 		
 		"""
-		rospy.loginfo('\n\n############ Executing state CHARGE ############\n')
+		log_msg = f'\n\n############ Executing state CHARGE ############\n'
+		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.recharge_srv()
 		while not rospy.is_shutdown():
 			self._helper.mutex.acquire()
@@ -191,7 +192,8 @@ class ReachCharge(smach.State):
 			TRANS_CHARGE_ON: is the transition to go from the REACHCHARGE state to the CHARGE state.
 		
 		"""
-		rospy.loginfo('\n\n############ Executing state REACH CHARGE ############\n')
+		log_msg = f'\n\n############ Executing state REACH CHARGE ############\n'
+		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.go_to_charge()
 		while not rospy.is_shutdown():
 			self._helper.mutex.acquire()
