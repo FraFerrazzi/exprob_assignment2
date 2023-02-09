@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utilities.exprob_assignment2.state_machine_helper &mdash; exprob_assignment2 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> exprob_assignment2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">exprob_assignment2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">utilities.exprob_assignment2.state_machine_helper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for utilities.exprob_assignment2.state_machine_helper</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: state_machine_helper</span>
+<span class="sd">	:platform: Unix</span>
+<span class="sd">	:synopsis: Python module for the Helper of the State Machine</span>
+<span class="sd">   </span>
+<span class="sd">.. moduleauthor:: Francesco Ferrazzi &lt;s5262829@studenti.unige.it&gt;</span>
+
+<span class="sd">ROS node for the second assignment of the Experimental Robotics course of the Robotics Engineering</span>
+<span class="sd">Master program. The software architecture allows initializing a helper class for the Final State Machine </span>
+<span class="sd">which controls the behavior of a surveillance robot. </span>
+<span class="sd">This node allows to have cleaner and more readable code in the state_machine.py node, in fact, every task</span>
+<span class="sd">called in the previously mentioned code is defined in the current node.</span>
+
+<span class="sd">Publishes to:</span>
+<span class="sd">	/cmd_vel to xontrol the velocities of the wheels of the robot</span>
+<span class="sd">	/robot/joint1_position_controller/command to make the base joint of the arm rotate</span>
+
+<span class="sd">Subscribes to:</span>
+<span class="sd">	/state/battery_low where the state of the battery is published</span>
+<span class="sd">	</span>
+<span class="sd">Service:</span>
+<span class="sd">	/state/recharge to charge the robot</span>
+<span class="sd">	/armor_interface_srv to communicate with the ontology</span>
+<span class="sd">	/world_init to get the informations of the rooms from aruco markers</span>
+<span class="sd">	</span>
+<span class="sd">Action Service:</span>
+<span class="sd">	/move_base to make the robot move autonomusly in the environemnt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">rospkg</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+<span class="kn">import</span> <span class="nn">actionlib.msg</span>
+<span class="kn">from</span> <span class="nn">move_base_msgs.msg</span> <span class="kn">import</span> <span class="n">MoveBaseAction</span><span class="p">,</span> <span class="n">MoveBaseGoal</span>
+<span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Lock</span>
+<span class="kn">from</span> <span class="nn">actionlib</span> <span class="kn">import</span> <span class="n">SimpleActionClient</span>
+
+<span class="c1"># Import the message to rotate the camera during the surveillance phase</span>
+<span class="kn">from</span> <span class="nn">sensor_msgs.msg</span> <span class="kn">import</span> <span class="n">JointState</span>
+
+<span class="c1"># Import constant name defined to structure the architecture.</span>
+<span class="kn">from</span> <span class="nn">exprob_assignment2</span> <span class="kn">import</span> <span class="n">architecture_name_mapper</span> <span class="k">as</span> <span class="n">anm</span>
+
+<span class="c1"># Import the messages used by services and publishers.</span>
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">Bool</span><span class="p">,</span> <span class="n">Float64</span><span class="p">,</span> <span class="n">Float32</span>
+<span class="kn">from</span> <span class="nn">std_srvs.srv</span> <span class="kn">import</span> <span class="n">SetBool</span><span class="p">,</span> <span class="n">SetBoolResponse</span><span class="p">,</span> <span class="n">SetBoolRequest</span>
+
+<span class="c1"># Import services and messages to build the world</span>
+<span class="kn">from</span> <span class="nn">exprob_assignment2.srv</span> <span class="kn">import</span> <span class="n">WorldInit</span><span class="p">,</span> <span class="n">WorldInitResponse</span>
+<span class="kn">from</span> <span class="nn">exprob_assignment2.msg</span> <span class="kn">import</span> <span class="n">RoomConnection</span>
+
+<span class="c1"># Armor import to work with the ontology</span>
+<span class="kn">from</span> <span class="nn">armor_msgs.srv</span> <span class="kn">import</span> <span class="n">ArmorDirective</span><span class="p">,</span> <span class="n">ArmorDirectiveRequest</span><span class="p">,</span> <span class="n">ArmorDirectiveResponse</span>
+<span class="kn">from</span> <span class="nn">armor_msgs.srv</span> <span class="kn">import</span> <span class="n">ArmorDirectiveList</span><span class="p">,</span> <span class="n">ArmorDirectiveListRequest</span><span class="p">,</span> <span class="n">ArmorDirectiveListResponse</span>
+
+<span class="c1"># A tag for identifying logs producer.</span>
+<span class="n">LOG_TAG</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">NODE_STATE_MACHINE</span>
+
+<span class="c1"># get the file path for rospy_tutorials</span>
+<span class="n">rp</span> <span class="o">=</span> <span class="n">rospkg</span><span class="o">.</span><span class="n">RosPack</span><span class="p">()</span>
+<span class="n">assignment_path</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">get_path</span><span class="p">(</span><span class="s1">&#39;exprob_assignment2&#39;</span><span class="p">)</span>
+
+<span class="c1"># Define the file path in which the ontology is stored</span>
+<span class="n">ONTOLOGY_FILE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">assignment_path</span><span class="p">,</span> <span class="s2">&quot;topological_map&quot;</span><span class="p">,</span> <span class="s2">&quot;topological_map.owl&quot;</span><span class="p">)</span>
+<span class="n">ONTOLOGY_FILE_PATH_DEBUG</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">assignment_path</span><span class="p">,</span> <span class="s2">&quot;topological_map&quot;</span><span class="p">,</span> <span class="s2">&quot;topological_map_debug.owl&quot;</span><span class="p">)</span>
+<span class="n">WEB_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://bnc/exp-rob-lab/2022-23&#39;</span>
+
+<span class="c1"># Initialize and define the client to use armor</span>
+<span class="n">cli_armorontology</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;/armor_interface_srv&#39;</span><span class="p">,</span> <span class="n">ArmorDirective</span><span class="p">)</span> 
+<span class="c1"># Initialize and define the request message for armor</span>
+<span class="n">armorontology_req</span> <span class="o">=</span> <span class="n">ArmorDirectiveRequest</span><span class="p">()</span>
+<span class="c1"># Initialize and define the arg list to pass to the ontology</span>
+<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c1"># Define the number for which the state of the action client is done</span>
+<span class="n">DONE</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1"># since the get_state() function returns 3 when the action server achieves the goal</span>
+
+
+
+<div class="viewcode-block" id="ontology_manager"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.ontology_manager">[docs]</a><span class="k">def</span> <span class="nf">ontology_manager</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">primary_command_spec</span><span class="p">,</span> <span class="n">secondary_command_spec</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">	Function used to communicate with the ARMOR service to set and retrieve informations of the ontology</span>
+<span class="sd">	regarding the environment. This function is used instead of the ARMOR API.</span>
+<span class="sd">		</span>
+<span class="sd">	Args:</span>
+<span class="sd">		command: it is the command to execute (e.g. ADD, LOAD, ...).</span>
+<span class="sd">		primary_command_spec: it is the primary command specification (optional).</span>
+<span class="sd">		secondary_command_spec: it is the secondary command specification (optional).</span>
+<span class="sd">		ARGS: it is the list of arguments (e.g. list of individuals to add).</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		armorontology_res: it returns a list of queried objects.</span>
+<span class="sd">		</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">armorontology_req</span><span class="o">.</span><span class="n">armor_request</span><span class="o">.</span><span class="n">client_name</span> <span class="o">=</span> <span class="s1">&#39;example&#39;</span>
+	<span class="n">armorontology_req</span><span class="o">.</span><span class="n">armor_request</span><span class="o">.</span><span class="n">reference_name</span> <span class="o">=</span> <span class="s1">&#39;ontoRef&#39;</span>
+	<span class="n">armorontology_req</span><span class="o">.</span><span class="n">armor_request</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+	<span class="n">armorontology_req</span><span class="o">.</span><span class="n">armor_request</span><span class="o">.</span><span class="n">primary_command_spec</span> <span class="o">=</span> <span class="n">primary_command_spec</span>
+	<span class="n">armorontology_req</span><span class="o">.</span><span class="n">armor_request</span><span class="o">.</span><span class="n">secondary_command_spec</span> <span class="o">=</span> <span class="n">secondary_command_spec</span>
+	<span class="n">armorontology_req</span><span class="o">.</span><span class="n">armor_request</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">ARGS</span>
+	<span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;/armor_interface_srv&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+			<span class="n">armorontology_res</span> <span class="o">=</span> <span class="p">(</span><span class="n">cli_armorontology</span><span class="p">(</span><span class="n">armorontology_req</span><span class="p">))</span><span class="o">.</span><span class="n">armor_response</span><span class="o">.</span><span class="n">queried_objects</span>
+			<span class="k">return</span> <span class="n">armorontology_res</span>
+	<span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Service call failed: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">e</span><span class="p">)</span>
+			<span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+			
+ 	
+<div class="viewcode-block" id="ontology_format"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.ontology_format">[docs]</a><span class="k">def</span> <span class="nf">ontology_format</span><span class="p">(</span><span class="n">old_list</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">	Function that takes as input a list and returns a new one, which starts from the old one.</span>
+<span class="sd">	The new list takes every element of the old list, starting from the index specified by &#39;start&#39;</span>
+<span class="sd">	and finishing at the index specified by &#39;end&#39;. In this way, only characters and numbers in </span>
+<span class="sd">	indexes that are between &#39;start&#39; and &#39;end&#39; will be copied into the new list.</span>
+<span class="sd">		</span>
+<span class="sd">	Args:</span>
+<span class="sd">		old_list: is the list that needs to be formatted.</span>
+<span class="sd">		start: starting list&#39;s element index that will be copied to the new list.</span>
+<span class="sd">		end: ending list&#39;s element index that will be copied to the new list.</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		new_list: is the correctly formatted list.</span>
+<span class="sd">		</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">new_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">num</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">old_list</span><span class="p">]</span>
+	<span class="k">return</span> <span class="n">new_list</span></div>
+
+
+
+<div class="viewcode-block" id="Helper"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper">[docs]</a><span class="k">class</span> <span class="nc">Helper</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	This class is created to decouple the implementation of the Finite State Machine, allowing to have a</span>
+<span class="sd">	more readable and cleaner code in the state_machine.py node. This class manages the synchronization </span>
+<span class="sd">	with subscribers, services and action servers to achieve the correct behavior.</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Function that initializes the class Helper.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Initialize the variables used in the class </span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">=</span> <span class="kc">False</span>            <span class="c1"># Set to True if the battery of the robot is low</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">map_completed</span> <span class="o">=</span> <span class="kc">False</span>          <span class="c1"># Set to True when the ontology is complete</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">aruco_detected</span> <span class="o">=</span> <span class="kc">False</span>         <span class="c1"># Set to true when all the aruco markers have been detected</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reasoner_done</span> <span class="o">=</span> <span class="kc">False</span>          <span class="c1"># Set to True after querying the ontology</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">motion_completed</span> <span class="o">=</span> <span class="kc">False</span>       <span class="c1"># Set to True when the robot arrives in the desired location</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">charge_reached</span> <span class="o">=</span> <span class="kc">False</span>         <span class="c1"># Set to True when the charging station is reached</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_completed</span> <span class="o">=</span> <span class="kc">False</span>        <span class="c1"># Set to True when the robot has finished surveillance action</span>
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span> <span class="o">=</span> <span class="p">[]</span>                 <span class="c1"># List to store the coordinates X and Y of each room </span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_connections</span> <span class="o">=</span> <span class="p">[]</span>                 <span class="c1"># List of connections containing _connected_to and _through_door lists</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_connected_to</span> <span class="o">=</span> <span class="p">[]</span>                <span class="c1"># List of rooms connected to a specific room</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_through_door</span> <span class="o">=</span> <span class="p">[]</span>                <span class="c1"># List of doors used for connecting rooms</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span> <span class="o">=</span> <span class="p">[]</span>                       <span class="c1"># List of all rooms </span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_doors</span> <span class="o">=</span> <span class="p">[]</span>                       <span class="c1"># List of all doors </span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>                   <span class="c1"># Variable to store the name of the room that will be visited</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_prev_goal</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">INIT_LOCATION</span>    <span class="c1"># Previous location, the robot starts from location &#39;E&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">markers_detected</span> <span class="o">=</span> <span class="mi">0</span>              <span class="c1"># Count the number of detected markers</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">charge_loc</span> <span class="o">=</span> <span class="n">anm</span><span class="o">.</span><span class="n">CHARGE_LOCATION</span>  <span class="c1"># Define the charging location</span>
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="c1"># Loop at 10hz</span>
+		
+		<span class="c1"># Initialize the current time</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>  
+		<span class="c1"># Initialize and define the mutex to work with shared variables</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+		
+		<span class="c1"># Load the ontology</span>
+		<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="n">ONTOLOGY_FILE_PATH</span><span class="p">,</span> <span class="n">WEB_PATH</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;PELLET&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">]</span>
+		<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;LOAD&#39;</span><span class="p">,</span> <span class="s1">&#39;FILE&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>	
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Loading of the ontology went well&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		
+		<span class="c1"># Subscribe to the topic that controls the battery level.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_sub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_BATTERY_LOW</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_callback</span><span class="p">)</span>
+		
+		<span class="c1"># Publisher to move rotate the camera for surveillance action</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">pub_base_joint</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_JOINT_BASE</span><span class="p">,</span> <span class="n">Float64</span><span class="p">,</span> <span class="n">queue_size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+		
+		<span class="c1"># Publisher to make the robot explore the initial room</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">twist_pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_TWIST</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+		
+		<span class="c1"># Initialize and define the server to build the map</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">world_srv</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Service</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_WORLD</span><span class="p">,</span> <span class="n">WorldInit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_world_init</span><span class="p">)</span>
+		
+		<span class="c1"># Initialize and define the client for the recharge service</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_RECHARGE</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">recharge_cli</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">TOPIC_RECHARGE</span><span class="p">,</span> <span class="n">SetBool</span><span class="p">)</span>
+		
+		<span class="c1"># Initialize and define the action client for the move base action service</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">move_cli</span> <span class="o">=</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">SimpleActionClient</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">ACTION_MOTION</span><span class="p">,</span> <span class="n">MoveBaseAction</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">move_cli</span><span class="o">.</span><span class="n">wait_for_server</span><span class="p">()</span>
+			
+		
+		
+<div class="viewcode-block" id="Helper.handle_world_init"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.handle_world_init">[docs]</a>	<span class="k">def</span> <span class="nf">handle_world_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Service used to get the map informations. The informations are taken from aruco markers once they </span>
+<span class="sd">		are detected.</span>
+<span class="sd">		The informations retrieved are later used to build the ontology of the environemnt to allow the robot to </span>
+<span class="sd">		move around the indoor scenario behaving as expected.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">			request: string and float values to state the name of the room, the coordinates in space </span>
+<span class="sd">			and the connections, concerning the door the other room at which it is connected.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			response: bool value to state if the information has been retrieved</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">room</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">request</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">connections</span><span class="p">)):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_connected_to</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">connections</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">connected_to</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_through_door</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">connections</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">through_door</span>
+			<span class="n">new_element</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_connected_to</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_through_door</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">new_element</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">:</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_element</span><span class="p">)</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hasDoor&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;ADD&#39;</span><span class="p">,</span> <span class="s1">&#39;OBJECTPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">markers_detected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_detected</span> <span class="o">+</span> <span class="mi">1</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">markers_detected</span> <span class="o">==</span> <span class="n">anm</span><span class="o">.</span><span class="n">MARKERS_NUMBER</span><span class="p">:</span>
+			<span class="c1"># Debug</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;############################################&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;ROOM:</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="si">}</span><span class="s1">&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;COORDINATES:</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span><span class="si">}</span><span class="s1">&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;############################################&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">aruco_detected</span> <span class="o">=</span> <span class="kc">True</span>     
+		<span class="k">return</span> <span class="n">WorldInitResponse</span><span class="p">(</span><span class="n">status</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span></div>
+	
+		
+<div class="viewcode-block" id="Helper.aruco_done"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.aruco_done">[docs]</a>	<span class="k">def</span> <span class="nf">aruco_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible for stating that all markers have been detected</span>
+<span class="sd">		and the informations from arucos can be used to update the ontology.</span>
+<span class="sd">		The returning value will be `True` if all the arucos have been detected, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.aruco_detected: Bool value that states the status of the detection of arucos.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">aruco_detected</span></div>
+			
+		
+<div class="viewcode-block" id="Helper.build_environment"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.build_environment">[docs]</a>	<span class="k">def</span> <span class="nf">build_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Method that initializes the environment ontology using the ARMOR service.</span>
+<span class="sd">		Once all markers have been detected, this method is called to upload all the new informations about</span>
+<span class="sd">		each room to the ontology. In this way, using the armor service, it is possible to initialize and </span>
+<span class="sd">		define everything that will be needed to guarantee the correct behavior of the program.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Get the number of rooms</span>
+		<span class="n">rooms_number</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="p">))</span>
+		<span class="c1"># Disjoint rooms and doors</span>
+		<span class="n">ARGS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_doors</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;Robot1&#39;</span><span class="p">]</span>
+		<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;DISJOINT&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+		<span class="c1"># State the robot initial position</span>
+		<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;isIn&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_loc</span><span class="p">]</span>
+		<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;ADD&#39;</span><span class="p">,</span> <span class="s1">&#39;OBJECTPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span> <span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+		<span class="c1"># Get a time in the past (before the timestamp of the robot)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000000000</span><span class="p">))</span> <span class="c1"># This is done to make every room URGENT at the beginning  </span>
+		<span class="c1"># Start the timestamp in every location to retrieve when a location becomes urgent</span>
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rooms_number</span><span class="p">:</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span><span class="p">]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;ADD&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="c1"># Reason about the ontology to assign the timestamp</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REASON&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+			<span class="n">last_location</span> <span class="o">=</span> <span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="n">last_location</span> <span class="o">=</span> <span class="n">ontology_format</span><span class="p">(</span><span class="n">last_location</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span> 
+		<span class="c1"># Update the timestamp of corridor &#39;E&#39; since the robot spawns in it</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span> <span class="c1"># initial location is not urgent</span>
+		<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_loc</span><span class="p">,</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span><span class="p">,</span> <span class="n">last_location</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+		<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REPLACE&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+		<span class="c1"># Save ontology for DEBUG purposes</span>
+		<span class="c1">#ARGS = [ONTOLOGY_FILE_PATH_DEBUG] # &lt;--- uncomment this line for ontology debug</span>
+		<span class="c1">#ontology_manager(&#39;SAVE&#39;, &#39;&#39;, &#39;&#39;, ARGS) # &lt;--- uncomment this line for ontology debug</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;§§§@@@ MAP HAS BEEN GENERATED @@@§§§</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="c1"># Before continuing make the robot rotate on itself to understand the sorroundings</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">explore_init_room</span><span class="p">()</span> 
+		<span class="bp">self</span><span class="o">.</span><span class="n">map_completed</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># Set to True only the one involved in the state</span></div>
+		
+		
+<div class="viewcode-block" id="Helper.explore_init_room"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.explore_init_room">[docs]</a>	<span class="k">def</span> <span class="nf">explore_init_room</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Method that allows the robot to rotate on itself when the ontology has been fully uploaded.</span>
+<span class="sd">		This is done in the initial room, before allowing the robot to reason about the environemnt.</span>
+<span class="sd">		The aim is to make the robot understand the sorroundings and give it time to upload the map</span>
+<span class="sd">		in Rviz so it does not run into walls.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">cmd</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+		<span class="c1"># No linear motion</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="c1"># Rotate on itself</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.6</span>
+		<span class="c1"># start the timer</span>
+		<span class="n">start_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_time</span><span class="p">()</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Rotate around a bit to explore!</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="c1"># Run the loop for six seconds to allow the ROBOT to undertand its sorroundings</span>
+		<span class="k">while</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">twist_pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+		<span class="c1"># Stop rotation</span>
+		<span class="n">cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">twist_pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span></div>
+		
+		
+<div class="viewcode-block" id="Helper.world_done"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.world_done">[docs]</a>	<span class="k">def</span> <span class="nf">world_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible for stating the creation of the environment </span>
+<span class="sd">		using the ARMOR service to define the ontology.</span>
+<span class="sd">		The returning value will be `True` if the map was created, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.map_completed: Bool value that states the status of the generation of the map.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_completed</span></div>
+		
+			
+<div class="viewcode-block" id="Helper.reason"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.reason">[docs]</a>	<span class="k">def</span> <span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Method that communicates with the ontology already created to retrieve information</span>
+<span class="sd">		and decide, based on the desired surveillance behavior, where the robot should move next.</span>
+<span class="sd">		First of all, reachable rooms and their status (e.g. ROOM, URGENT, CORRIDOR) are retrieved.</span>
+<span class="sd">		Then, each reachable room is checked and the robot will move first in URGENT locations.</span>
+<span class="sd">		If there are no URGENT locations, it stays on CORRIDORS. If there are no CORRIDORS the robot</span>
+<span class="sd">		moves to a random ROOM. In the end, the next location that will be visited is returned.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">			</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self._next_goal: is the next location that will be reached decided by the reasoner.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Reset the boolean variables</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reset_var</span><span class="p">()</span>
+		<span class="c1"># Reason about the onoloy</span>
+		<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
+		<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REASON&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+		<span class="c1"># Retreive the locations that the robot can reach</span>
+		<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;canReach&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">]</span>
+		<span class="n">can_reach</span> <span class="o">=</span> <span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> <span class="s1">&#39;OBJECTPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+		<span class="n">can_reach</span> <span class="o">=</span> <span class="n">ontology_format</span><span class="p">(</span><span class="n">can_reach</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+		<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">can_reach</span><span class="p">)</span> <span class="c1"># Make the choice randomic</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The Robot can reach:</span><span class="se">\n</span><span class="si">{</span><span class="n">can_reach</span><span class="si">}</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="c1"># Retrieve the status of the reachable locations</span>
+		<span class="n">loc_status</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">all_status</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">can_reach</span><span class="p">)):</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="n">can_reach</span><span class="p">[</span><span class="n">loc</span><span class="p">],</span> <span class="s1">&#39;false&#39;</span><span class="p">]</span>
+			<span class="n">loc_status</span> <span class="o">=</span> <span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>  
+			<span class="n">loc_status</span> <span class="o">=</span> <span class="n">ontology_format</span><span class="p">(</span><span class="n">loc_status</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+			<span class="n">all_status</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loc_status</span><span class="p">)</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Locations status:</span><span class="se">\n</span><span class="si">{</span><span class="n">all_status</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="c1"># Check the status of the room (i.e. ROOM, CORRIDOR, URGENT)</span>
+		<span class="n">urgent_loc</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">possible_corridor</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_status</span><span class="p">)):</span>
+			<span class="k">for</span> <span class="n">urg</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_status</span><span class="p">[</span><span class="n">sta</span><span class="p">])):</span>
+				<span class="c1"># If location is urgent and it is reachable</span>
+				<span class="k">if</span> <span class="n">all_status</span><span class="p">[</span><span class="n">sta</span><span class="p">][</span><span class="n">urg</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;URGENT&#39;</span><span class="p">:</span>
+					<span class="n">urgent_loc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">can_reach</span><span class="p">[</span><span class="n">sta</span><span class="p">])</span>
+				<span class="c1"># If location is a corridor and it is reachable</span>
+				<span class="k">elif</span> <span class="n">all_status</span><span class="p">[</span><span class="n">sta</span><span class="p">][</span><span class="n">urg</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;CORRIDOR&#39;</span><span class="p">:</span>
+					<span class="n">possible_corridor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">can_reach</span><span class="p">[</span><span class="n">sta</span><span class="p">])</span>
+		<span class="c1"># Retrieve the next location taht will be checked by the robot</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">urgent_loc</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;NO URGENT LOCATIONS&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_corridor</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;NO REACHABLE CORRIDORS&#39;</span>
+				<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span> <span class="o">=</span> <span class="n">can_reach</span> <span class="c1"># take the reachable rooms</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;CORRIDORS:</span><span class="se">\n</span><span class="si">{</span><span class="n">possible_corridor</span><span class="si">}</span><span class="s1">&#39;</span>
+				<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span> <span class="o">=</span> <span class="n">possible_corridor</span> <span class="c1"># take the reachable corridors</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;URGENT:</span><span class="se">\n</span><span class="si">{</span><span class="n">urgent_loc</span><span class="si">}</span><span class="s1">&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span> <span class="o">=</span> <span class="n">urgent_loc</span> <span class="c1"># take the urgent rooms</span>
+		<span class="c1"># If the next goal is a list, take only the first one</span>
+		<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reasoner_done</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># Set to True only the one involved in the state</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span></div>
+		
+		
+<div class="viewcode-block" id="Helper.reason_done"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.reason_done">[docs]</a>	<span class="k">def</span> <span class="nf">reason_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible for stating the completion of the reasoning</span>
+<span class="sd">		phase achieved using the ARMOR service to retrieve informations from the ontology.</span>
+<span class="sd">		The returning value will be `True` if the reasoner is done, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.reasoner_done: Bool value that states the status of the reasoner.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reasoner_done</span></div>
+	
+	
+<div class="viewcode-block" id="Helper.go_to_charge"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.go_to_charge">[docs]</a>	<span class="k">def</span> <span class="nf">go_to_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Function that allows the robot to go to the charging location before it starts the </span>
+<span class="sd">		charging routine.</span>
+<span class="sd">		When the robot&#39;s battery is low, it gets as target location the charging station</span>
+<span class="sd">		and moves towards it. It calls the self.go_to_goal method to reach the location. </span>
+<span class="sd">		The variable charge_reached is set to True once the robot is in room &#39;E&#39; and, therefore,</span>
+<span class="sd">		the robot is ready to be charged. </span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">			</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Reset the boolean variables</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reset_var</span><span class="p">()</span>
+		<span class="c1"># Set the next location to be the charging station</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_loc</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Battery of the robot low!</span><span class="se">\n</span><span class="s1">The ROBOT is going to the CHARGING STATION&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">go_to_goal</span><span class="p">()</span>
+		<span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_cli</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span> <span class="o">!=</span> <span class="n">DONE</span><span class="p">:</span> <span class="c1"># Loops until the plan action service is Not DONE</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span> <span class="c1"># Wate time</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The ROBOT arrived at the CHARGING STATION&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">charge_reached</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># Set to True only the one involved in the state</span></div>
+		
+		
+<div class="viewcode-block" id="Helper.charge_ready"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.charge_ready">[docs]</a>	<span class="k">def</span> <span class="nf">charge_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible for stating that the robot is ready to be</span>
+<span class="sd">		charged once the location &#39;E&#39; is reached.</span>
+<span class="sd">		The returning value will be `True` if the charge location is reached, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.charge_reached: Bool value that states if the charging location is reached.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_reached</span></div>
+		
+	
+<div class="viewcode-block" id="Helper.battery_callback"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.battery_callback">[docs]</a>	<span class="k">def</span> <span class="nf">battery_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		It is the callback that manages the subscriber to the topic: /state/battery_low to retrieve</span>
+<span class="sd">		the state of the battery.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">			msg: is the subscriber to the topic /state/battery_low to get the state of the battery.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>    <span class="c1"># take the mutex</span>
+		<span class="k">try</span><span class="p">:</span> 
+			<span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span>    <span class="c1"># change the flag of battery low with the received message</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+				<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">@@@### BATTERY: LOW! RECHARGE! ###@@@</span><span class="se">\n</span><span class="s1">&#39;</span>
+				<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+				<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">@@@### BATTERY: FULL ###@@@</span><span class="se">\n</span><span class="s1">&#39;</span>
+				<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="k">finally</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">mutex</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>    <span class="c1"># release the mutex</span></div>
+	
+			
+<div class="viewcode-block" id="Helper.ret_battery_low"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.ret_battery_low">[docs]</a>	<span class="k">def</span> <span class="nf">ret_battery_low</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible for stating the power level of the battery</span>
+<span class="sd">		of the robot. </span>
+<span class="sd">		The returning value will be `True` if the battery is low, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.battery_low: Bool value that states the status of the battery.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span></div>
+			
+			
+<div class="viewcode-block" id="Helper.recharge_srv"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.recharge_srv">[docs]</a>	<span class="k">def</span> <span class="nf">recharge_srv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Blocking service used to charge the battery of the robot. Once the battery is low </span>
+<span class="sd">		and the robot is in the charging location, a request is sent to the service which </span>
+<span class="sd">		charges the battery after a defined time and gets a result as soon as it is charged. </span>
+<span class="sd">		When the service is done, the battery of the robot is set to high by putting the variable</span>
+<span class="sd">		battery_low to False.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">request</span> <span class="o">=</span> <span class="n">SetBoolRequest</span><span class="p">()</span>
+		<span class="n">request</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recharge_cli</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The Robot has been recharged! Ready for action!!</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">=</span> <span class="kc">False</span></div>
+	
+		
+<div class="viewcode-block" id="Helper.go_to_goal"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.go_to_goal">[docs]</a>	<span class="k">def</span> <span class="nf">go_to_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		This method allows to define a goal in the sapce according to the Reasoner decision.</span>
+<span class="sd">		Once the _next_goal is defined, its coordinates in space are retrieved and are given to the </span>
+<span class="sd">		MoveBase action service. </span>
+<span class="sd">		MoveBase allows to find a path between the robot and the goal, keeping into account the environment</span>
+<span class="sd">		and possible obstacles thanks to a SLAM algorithm. </span>
+<span class="sd">		This path is followed by the robot and can be adjusted real-time during execution if a new obstacle</span>
+<span class="sd">		is seen by sensors. MoveBase also checks that the robot keeps following the desired path.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Reset the boolean variables</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reset_var</span><span class="p">()</span>
+		<span class="c1"># Get the goal and its coordinates</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">room_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The Goal cannot be found</span><span class="se">\n</span><span class="s1">&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The ROBOT is planning to go to:</span><span class="se">\n</span><span class="s1">Room: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rooms</span><span class="p">[</span><span class="n">room_index</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">Coordinates: (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span><span class="p">[</span><span class="n">room_index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">,</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span><span class="p">[</span><span class="n">room_index</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">)</span><span class="se">\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="n">goal</span> <span class="o">=</span> <span class="n">MoveBaseGoal</span><span class="p">()</span>
+		<span class="c1"># Set the desired goal that we want to reach</span>
+		<span class="n">goal</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="s2">&quot;map&quot;</span>
+		<span class="n">goal</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">stamp</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+		<span class="n">goal</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span><span class="p">[</span><span class="n">room_index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">goal</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rooms_coord</span><span class="p">[</span><span class="n">room_index</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">goal</span><span class="o">.</span><span class="n">target_pose</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="c1"># Sends the goal to the action server.</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">move_cli</span><span class="o">.</span><span class="n">send_goal</span><span class="p">(</span><span class="n">goal</span><span class="p">)</span></div>
+		
+	
+<div class="viewcode-block" id="Helper.check_motion"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.check_motion">[docs]</a>	<span class="k">def</span> <span class="nf">check_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		This method checks if the robot arrives at the desired location checking the state of the MoveBase</span>
+<span class="sd">		action service, which must be equal to DONE.</span>
+<span class="sd">		When it is done, the ontology is updated.</span>
+<span class="sd">		Firt of all the robot is placed in the new location in the ontology. Also, the timestamp of the robot </span>
+<span class="sd">		is updated, as well as the timestamp of the goal location. This allows to make the robot behave as </span>
+<span class="sd">		expected.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Execute only when the plan action service is done</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_cli</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span> <span class="o">==</span> <span class="n">DONE</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The ROBOT has arrived to the destination&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="c1"># Update the position of the ROBOT in the ontology</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;isIn&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_goal</span><span class="p">]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REPLACE&#39;</span><span class="p">,</span> <span class="s1">&#39;OBJECTPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span> <span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_prev_goal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span>
+			<span class="c1"># Reason about the onoloy</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REASON&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="c1"># Retreive the last time the robot moved</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;now&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">]</span>
+			<span class="n">last_motion</span> <span class="o">=</span> <span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="n">last_motion</span> <span class="o">=</span> <span class="n">ontology_format</span><span class="p">(</span><span class="n">last_motion</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+			<span class="c1"># Retreive the last time a specific location has been visited</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="p">]</span>
+			<span class="n">last_location</span> <span class="o">=</span> <span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="n">last_location</span> <span class="o">=</span> <span class="n">ontology_format</span><span class="p">(</span><span class="n">last_location</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span> 
+			<span class="c1"># Update the time</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span> 
+			<span class="c1"># Update the timestamp since the robot moved</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;now&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">,</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span><span class="p">,</span> <span class="n">last_motion</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REPLACE&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="c1"># Update the timestamp since the robot visited the location</span>
+			<span class="n">ARGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;visitedAt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="p">,</span> <span class="s1">&#39;Long&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer_now</span><span class="p">,</span> <span class="n">last_location</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+			<span class="n">ontology_manager</span><span class="p">(</span><span class="s1">&#39;REPLACE&#39;</span><span class="p">,</span> <span class="s1">&#39;DATAPROP&#39;</span><span class="p">,</span> <span class="s1">&#39;IND&#39;</span><span class="p">,</span> <span class="n">ARGS</span><span class="p">)</span>
+			<span class="c1"># Cancel the goal to be sure</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">cancel_motion</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">motion_completed</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Set to True only the one involved in the state</span></div>
+	
+		
+<div class="viewcode-block" id="Helper.motion_done"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.motion_done">[docs]</a>	<span class="k">def</span> <span class="nf">motion_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible of stating the status of the robot&#39;s motion.</span>
+<span class="sd">		The returning value will be `True` if the goal has been reached, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.motion_completed: Bool value that states the status of the motion.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">motion_completed</span></div>
+		
+	
+<div class="viewcode-block" id="Helper.cancel_motion"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.cancel_motion">[docs]</a>	<span class="k">def</span> <span class="nf">cancel_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		This function cancels pending goals that are sent to the MoveBase action service.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Cancel the previous goal</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="c1"># Cancel the goal</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">move_cli</span><span class="o">.</span><span class="n">cancel_all_goals</span><span class="p">()</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+				
+				
+<div class="viewcode-block" id="Helper.reset_var"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.reset_var">[docs]</a>	<span class="k">def</span> <span class="nf">reset_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		It is used to reset all the variables used to decide when a task has finished its execution.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">			</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>    <span class="c1"># take the mutex</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reasoner_done</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">motion_completed</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">charge_reached</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">check_completed</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mutex</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>    <span class="c1"># release the mutex</span></div>
+		
+	
+<div class="viewcode-block" id="Helper.do_surveillance"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.do_surveillance">[docs]</a>	<span class="k">def</span> <span class="nf">do_surveillance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		It simulates a survaillance task of the location in which the robot arrives.</span>
+<span class="sd">		The camera of the robot is rotated of 360 dergees about its axis. In this way the robot </span>
+<span class="sd">		can have a clear view of the sorroundings. The camera rotates thatnks to base joint located</span>
+<span class="sd">		at the base of the arm. </span>
+<span class="sd">		While it explores the location, also the status of the battery is checked.</span>
+<span class="sd">		</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1"># Reset the boolean variables</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">reset_var</span><span class="p">()</span>
+		<span class="c1"># Surveillance task</span>
+		<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The ROBOT starts surveilling room: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+		<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+		<span class="n">joint_angle</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">joint_angle</span> <span class="o">&lt;=</span> <span class="mf">3.1</span><span class="p">:</span> <span class="c1"># If bettery low there won&#39;t be surveillance task</span>
+			<span class="c1"># Rotate the base joint of the robot</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">pub_base_joint</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">joint_angle</span><span class="p">)</span>
+			<span class="n">joint_angle</span> <span class="o">+=</span> <span class="mf">0.1</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+		<span class="c1"># Make the camera look the fron side of the robot</span>
+		<span class="n">joint_angle</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">pub_base_joint</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">joint_angle</span><span class="p">)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_low</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;The robot checked location: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_goal</span><span class="si">}</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_completed</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Set to True only the one involved in the state</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">log_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Stop surveilling! Battery low!</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+			<span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="n">anm</span><span class="o">.</span><span class="n">tag_log</span><span class="p">(</span><span class="n">log_msg</span><span class="p">,</span> <span class="n">LOG_TAG</span><span class="p">))</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">check_completed</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Set to False since action was not completed</span></div>
+	
+	
+	
+<div class="viewcode-block" id="Helper.surveillance_done"><a class="viewcode-back" href="../../../index.html#utilities.exprob_assignment2.state_machine_helper.Helper.surveillance_done">[docs]</a>	<span class="k">def</span> <span class="nf">surveillance_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">		Get the value of the variable responsible of stating the status of the surveillance task.</span>
+<span class="sd">		The returning value will be `True` if the robot has checked the location, `False` otherwise.</span>
+<span class="sd">		</span>
+<span class="sd">		Args:</span>
+<span class="sd">			self: instance of the current class.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns:</span>
+<span class="sd">			self.check_completed: Bool value that states the status of the surveillance task.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_completed</span></div></div>
+		
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Francesco Ferrazzi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

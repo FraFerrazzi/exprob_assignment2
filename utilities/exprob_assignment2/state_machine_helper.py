@@ -6,11 +6,15 @@
    
 .. moduleauthor:: Francesco Ferrazzi <s5262829@studenti.unige.it>
 
-ROS node for the first assignment of the Experimental Robotics course of the Robotics Engineering
+ROS node for the second assignment of the Experimental Robotics course of the Robotics Engineering
 Master program. The software architecture allows initializing a helper class for the Final State Machine 
 which controls the behavior of a surveillance robot. 
 This node allows to have cleaner and more readable code in the state_machine.py node, in fact, every task
 called in the previously mentioned code is defined in the current node.
+
+Publishes to:
+	/cmd_vel to xontrol the velocities of the wheels of the robot
+	/robot/joint1_position_controller/command to make the base joint of the arm rotate
 
 Subscribes to:
 	/state/battery_low where the state of the battery is published
@@ -18,10 +22,10 @@ Subscribes to:
 Service:
 	/state/recharge to charge the robot
 	/armor_interface_srv to communicate with the ontology
+	/world_init to get the informations of the rooms from aruco markers
 	
 Action Service:
-	/motion/planner to make the planner create the desired path
-	/motion/controller to make the controller follow the desired path
+	/move_base to make the robot move autonomusly in the environemnt
 """
 
 import threading
@@ -165,11 +169,11 @@ class Helper:
 		self.markers_detected = 0              # Count the number of detected markers
 		self.charge_loc = anm.CHARGE_LOCATION  # Define the charging location
 		
-		self.rate = rospy.Rate(10) # 10hz
+		self.rate = rospy.Rate(10) # Loop at 10hz
 		
 		# Initialize the current time
 		self.timer_now = str(int(time.time()))  
-		# Initialize and define the mutex to work with transition variables
+		# Initialize and define the mutex to work with shared variables
 		self.mutex = Lock()
 		
 		# Load the ontology
@@ -202,14 +206,18 @@ class Helper:
 		
 	def handle_world_init(self, request):
 		""" 
-		Service used to 
+		Service used to get the map informations. The informations are taken from aruco markers once they 
+		are detected.
+		The informations retrieved are later used to build the ontology of the environemnt to allow the robot to 
+		move around the indoor scenario behaving as expected.
 		
 		Args:
 			self: instance of the current class.
-			request: 
+			request: string and float values to state the name of the room, the coordinates in space 
+			and the connections, concerning the door the other room at which it is connected.
 		
 		Returns:
-			response: 
+			response: bool value to state if the information has been retrieved
 		
 		"""
 		self._rooms.append(request.room)
@@ -225,15 +233,13 @@ class Helper:
 		self.markers_detected = self.markers_detected + 1
 		if self.markers_detected == anm.MARKERS_NUMBER:
 			# Debug
-			log_msg = f'############################'
+			log_msg = f'############################################'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'ROOM: {self._rooms}'
+			log_msg = f'ROOM:\n{self._rooms}'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'COORDINATES: {self._rooms_coord}'
+			log_msg = f'COORDINATES:\n{self._rooms_coord}'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'CONNECTIONS: {self._connections}'
-			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'############################'
+			log_msg = f'############################################'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.aruco_detected = True     
 		return WorldInitResponse(status = True)
@@ -241,15 +247,15 @@ class Helper:
 		
 	def aruco_done(self):
 		""" 
-		Get the value of the variable responsible for stating the creation of the environment 
-		using the ARMOR service to define the ontology.
-		The returning value will be `True` if the map was created, `False` otherwise.
+		Get the value of the variable responsible for stating that all markers have been detected
+		and the informations from arucos can be used to update the ontology.
+		The returning value will be `True` if all the arucos have been detected, `False` otherwise.
 		
 		Args:
 			self: instance of the current class.
 		
 		Returns:
-			self.map_completed: Bool value that states the status of the generation of the map.
+			self.aruco_detected: Bool value that states the status of the detection of arucos.
 		
 		"""
 		return self.aruco_detected
@@ -258,10 +264,9 @@ class Helper:
 	def build_environment(self):
 		""" 
 		Method that initializes the environment ontology using the ARMOR service.
-		It creates the desired indoor environment in a random way, based on a fixed number 
-		of rooms, doors and corridors. 
-		It also communicates with the ontology to initialize and define everything 
-		that will be needed to guarantee the correct behavior of the program.
+		Once all markers have been detected, this method is called to upload all the new informations about
+		each room to the ontology. In this way, using the armor service, it is possible to initialize and 
+		define everything that will be needed to guarantee the correct behavior of the program.
 		
 		Args:
 			self: instance of the current class.
@@ -287,20 +292,14 @@ class Helper:
 			ARGS = ['visitedAt', self._rooms[i]]
 			last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
 			last_location = ontology_format(last_location, 1, 11) 
-			print('Room:', self._rooms[i], '<#>  Init timestamp:', last_location, '\n')
 		# Update the timestamp of corridor 'E' since the robot spawns in it
-		#ARGS = ['']
-		#ontology_manager('REASON', '', '', ARGS)
-		#ARGS = ['visitedAt', self.charge_loc]
-		#last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
-		#last_location = ontology_format(last_location, 1, 11) 
 		self.timer_now = str(int(time.time())) # initial location is not urgent
 		ARGS = ['visitedAt', self.charge_loc, 'Long', self.timer_now, last_location[0]]
 		ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
 		# Save ontology for DEBUG purposes
 		#ARGS = [ONTOLOGY_FILE_PATH_DEBUG] # <--- uncomment this line for ontology debug
 		#ontology_manager('SAVE', '', '', ARGS) # <--- uncomment this line for ontology debug
-		log_msg = f'The map has been generated in the ontology\n\n'
+		log_msg = f'§§§@@@ MAP HAS BEEN GENERATED @@@§§§\n\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Before continuing make the robot rotate on itself to understand the sorroundings
 		self.explore_init_room() 
@@ -308,6 +307,16 @@ class Helper:
 		
 		
 	def explore_init_room(self):
+		""" 
+		Method that allows the robot to rotate on itself when the ontology has been fully uploaded.
+		This is done in the initial room, before allowing the robot to reason about the environemnt.
+		The aim is to make the robot understand the sorroundings and give it time to upload the map
+		in Rviz so it does not run into walls.
+		
+		Args:
+			self: instance of the current class.
+		
+		"""
 		cmd = Twist()
 		# No linear motion
 		cmd.linear.x = 0
@@ -349,8 +358,7 @@ class Helper:
 	def reason(self):
 		""" 
 		Method that communicates with the ontology already created to retrieve information
-		and decide, based on the desired pre-determined behavior, where the robot should
-		move next.
+		and decide, based on the desired surveillance behavior, where the robot should move next.
 		First of all, reachable rooms and their status (e.g. ROOM, URGENT, CORRIDOR) are retrieved.
 		Then, each reachable room is checked and the robot will move first in URGENT locations.
 		If there are no URGENT locations, it stays on CORRIDORS. If there are no CORRIDORS the robot
@@ -360,7 +368,7 @@ class Helper:
 			self: instance of the current class.
 			
 		Returns:
-			self.next_loc: is the next location that will be reached decided by the reasoner.
+			self._next_goal: is the next location that will be reached decided by the reasoner.
 		
 		"""
 		# Reset the boolean variables
@@ -373,7 +381,7 @@ class Helper:
 		can_reach = ontology_manager('QUERY', 'OBJECTPROP', 'IND', ARGS)
 		can_reach = ontology_format(can_reach, 32, -1)
 		random.shuffle(can_reach) # Make the choice randomic
-		log_msg = f'The Robot can reach:\n {can_reach}'
+		log_msg = f'The Robot can reach:\n{can_reach}'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Retrieve the status of the reachable locations
 		loc_status = []
@@ -383,9 +391,9 @@ class Helper:
 			loc_status = ontology_manager('QUERY', 'CLASS', 'IND', ARGS)  
 			loc_status = ontology_format(loc_status, 32, -1)
 			all_status.append(loc_status)
-		log_msg = f'Status of the locations:\n {all_status}'
+		log_msg = f'Locations status:\n{all_status}\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-		# Check the status of the room (e.g. ROOM, CORRIDOR, URGENT)
+		# Check the status of the room (i.e. ROOM, CORRIDOR, URGENT)
 		urgent_loc = []
 		possible_corridor = []
 		for sta in range(0, len(all_status)):
@@ -398,20 +406,21 @@ class Helper:
 					possible_corridor.append(can_reach[sta])
 		# Retrieve the next location taht will be checked by the robot
 		if len(urgent_loc) == 0:
-			log_msg = f'There are no urgent locations'
+			log_msg = f'NO URGENT LOCATIONS'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			if len(possible_corridor) == 0:
-				log_msg = f'There are no reachable corridors'
+				log_msg = f'NO REACHABLE CORRIDORS'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-				self._next_goal = can_reach # take the first randomic reachable room
+				self._next_goal = can_reach # take the reachable rooms
 			else:
-				log_msg = f'The reachable corridors are:\n {possible_corridor}'
+				log_msg = f'CORRIDORS:\n{possible_corridor}'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-				self._next_goal = possible_corridor # take the first reachable corridor
+				self._next_goal = possible_corridor # take the reachable corridors
 		else:
-			log_msg = f'The Urgent locations are:\n {urgent_loc}'
+			log_msg = f'URGENT:\n{urgent_loc}'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			self._next_goal = urgent_loc # take the first randomic urgent room
+			self._next_goal = urgent_loc # take the urgent rooms
+		# If the next goal is a list, take only the first one
 		if type(self._next_goal) == list:
 			self._next_goal = self._next_goal[0]
 		self.reasoner_done = True   # Set to True only the one involved in the state
@@ -439,9 +448,9 @@ class Helper:
 		Function that allows the robot to go to the charging location before it starts the 
 		charging routine.
 		When the robot's battery is low, it gets as target location the charging station
-		and moves towards it. After calling the planner and the controller to reach the location,
-		once 'E' is reached, the variable charge_reached is set to True and the robot is ready
-		to be charged. 
+		and moves towards it. It calls the self.go_to_goal method to reach the location. 
+		The variable charge_reached is set to True once the robot is in room 'E' and, therefore,
+		the robot is ready to be charged. 
 		
 		Args:
 			self: instance of the current class.
@@ -452,12 +461,12 @@ class Helper:
 		self.reset_var()
 		# Set the next location to be the charging station
 		self._next_goal = self.charge_loc
-		log_msg = f'Battery of the robot low!\nThe ROBOT is going to the charging station'
+		log_msg = f'Battery of the robot low!\nThe ROBOT is going to the CHARGING STATION'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.go_to_goal()
 		while self.move_cli.get_state() != DONE: # Loops until the plan action service is Not DONE
 			self.rate.sleep() # Wate time
-		log_msg = f'The ROBOT arrived at the charging station'
+		log_msg = f'The ROBOT arrived at the CHARGING STATION'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.charge_reached = True   # Set to True only the one involved in the state
 		
@@ -492,10 +501,10 @@ class Helper:
 		try: 
 			self.battery_low = msg.data    # change the flag of battery low with the received message
 			if self.battery_low == True:
-				log_msg = f'\n@@@ Battery of the robot is low! Recharging needed @@@\n'
+				log_msg = f'\n@@@### BATTERY: LOW! RECHARGE! ###@@@\n'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			if self.battery_low == False:
-				log_msg = f'\n@@@ Battery of the robot is full! @@@\n'
+				log_msg = f'\n@@@### BATTERY: FULL ###@@@\n'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		finally:
 			self.mutex.release()    # release the mutex
@@ -539,9 +548,13 @@ class Helper:
 		
 	def go_to_goal(self):
 		""" 
-		This method executes a planner for a surveillance task. It starts by deciding a random
-		point inside the environment that will be reached. Then, a request to the PlanGoal() action 
-		service is done to simulate a planner.
+		This method allows to define a goal in the sapce according to the Reasoner decision.
+		Once the _next_goal is defined, its coordinates in space are retrieved and are given to the 
+		MoveBase action service. 
+		MoveBase allows to find a path between the robot and the goal, keeping into account the environment
+		and possible obstacles thanks to a SLAM algorithm. 
+		This path is followed by the robot and can be adjusted real-time during execution if a new obstacle
+		is seen by sensors. MoveBase also checks that the robot keeps following the desired path.
 		
 		Args:
 			self: instance of the current class.
@@ -570,10 +583,12 @@ class Helper:
 	
 	def check_motion(self):
 		""" 
-		This method checks if the planner has done its execution when the state of the action service
-		is equal to DONE.
-		When it is done, the random path of via points going from the current point to the target point
-		is retrieved. This path is then used by the controller.
+		This method checks if the robot arrives at the desired location checking the state of the MoveBase
+		action service, which must be equal to DONE.
+		When it is done, the ontology is updated.
+		Firt of all the robot is placed in the new location in the ontology. Also, the timestamp of the robot 
+		is updated, as well as the timestamp of the goal location. This allows to make the robot behave as 
+		expected.
 		
 		Args:
 			self: instance of the current class.
@@ -613,14 +628,14 @@ class Helper:
 		
 	def motion_done(self):
 		""" 
-		Get the value of the variable responsible of stating the status of the planner.
-		The returning value will be `True` if the planner has finished, `False` otherwise.
+		Get the value of the variable responsible of stating the status of the robot's motion.
+		The returning value will be `True` if the goal has been reached, `False` otherwise.
 		
 		Args:
 			self: instance of the current class.
 		
 		Returns:
-			self.plan_completed: Bool value that states the status of the planner.
+			self.motion_completed: Bool value that states the status of the motion.
 		
 		"""
 		return self.motion_completed
@@ -628,9 +643,7 @@ class Helper:
 	
 	def cancel_motion(self):
 		""" 
-		This function executes the controller for a surveillance task. It starts by 
-		getting the via points from the planner and sends a request to the ControlGoal() 
-		action service in order to follow the desired path. 
+		This function cancels pending goals that are sent to the MoveBase action service.
 		
 		Args:
 			self: instance of the current class.
@@ -661,8 +674,10 @@ class Helper:
 	
 	def do_surveillance(self):
 		""" 
-		It simulates a survaillance task of the location in which the robot arrives when the 
-		controller has done its execution. 
+		It simulates a survaillance task of the location in which the robot arrives.
+		The camera of the robot is rotated of 360 dergees about its axis. In this way the robot 
+		can have a clear view of the sorroundings. The camera rotates thatnks to base joint located
+		at the base of the arm. 
 		While it explores the location, also the status of the battery is checked.
 		
 		

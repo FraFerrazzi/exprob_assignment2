@@ -6,14 +6,14 @@
    
 .. moduleauthor:: Francesco Ferrazzi <s5262829@studenti.unige.it>
 
-ROS node for the first assignment of the Experimental Robotics course of the Robotics Engineering
+ROS node for the second assignment of the Experimental Robotics course of the Robotics Engineering
 Master program. The software architecture allows initializing a Final State Machine which controls 
 the behavior of a surveillance robot. 
 The scenario involves a robot deployed in an indoor environment for surveillance purposes.
 The robot's objective is to visit different locations, which are rooms and corridors, and stay there 
 for some time. The robot starts in the E, which is the charging location, and waits until it receives 
-the information to build the topological map. The robot moves to a new location and waits a few seconds 
-before it checks another location. This behavior is repeated until the program is not shut down.
+the information to build the topological map. The robot moves to a new location and do a surveillance
+task before it checks another location. This behavior is repeated until the program is not shut down.
 When the robot's battery is low, it goes to the charging location and waits some time before it starts 
 again the just explained behavior. When the robot's battery is not low, it should move among locations 
 with the following policy:
@@ -42,17 +42,17 @@ from exprob_assignment2.state_machine_helper import Helper
 from exprob_assignment2 import architecture_name_mapper as anm
 
 # The list of names that identify the states of the Finite State Machine.
-STATE_CHARGE = 'CHARGE'              # State where the robot recharges its battery.
-STATE_BUILD_WORLD = 'BUILDWORLD'     # State where the environment is build using the ontology.
-STATE_REASONER = 'REASONER'          # State that decides the next action done by the robot.
-STATE_MOTION = 'MOTION'              # State that allows the robot to move in the environement according to a plan algorithm.
-STATE_REACH_CHARGE = 'REACHCHARGE'   # State used to let the robot reach the charging station.
-STATE_SURVEILLANCE = 'SURVEILLANCE'  # State that checks the location in which the root stops.
+STATE_CHARGE = 'CHARGE'                # State where the robot recharges its battery.
+STATE_BUILD_WORLD = 'BUILDWORLD'       # State where the environment is build using informations from the aruco.
+STATE_REASONER = 'REASONER'            # State that decides the next location that will be visisted.
+STATE_MOTION = 'MOTION'                # State that allows the robot to move in the environement.
+STATE_REACH_CHARGE = 'REACHCHARGE'     # State used to let the robot reach the charging station.
+STATE_SURVEILLANCE = 'SURVEILLANCE'    # State that checks the location in which the root stops.
 
 
 # The list of names that identify the transitions of the Finite State Machine.
-TRANS_BATTERY_LOW = 'battery_low'      # The transition from the inner Finite State Machine associated with the `REASONER` and 'MOTION' states toward the `REACHCHARGE` state.
-TRANS_BATTERY_OK = 'battery_ok'        # The transition from the `CHARGE` state to the inner Finite State Machine associated with the `REASONER` state.
+TRANS_BATTERY_LOW = 'battery_low'      # The transition from the `REASONER`, 'MOTION' and `SURVEILLANCE` states toward the `REACHCHARGE` state.
+TRANS_BATTERY_OK = 'battery_ok'        # The transition from the `CHARGE` state to the `REASONER` state.
 TRANS_CHECK_LOC = 'check_loc'          # The transition from the `MOTION` state to the `SURVEILLANCE` state.
 TRANS_INFO_DONE = 'info_done'          # The transition from the `REASONER` state to the `MOTION` state.
 TRANS_WORLD_DONE = 'world_done'        # The transition from the `BUILDWORLD` state with to the 'REASONER' state.
@@ -85,7 +85,9 @@ class BuildWorld(smach.State):
 	def execute(self, userdata):
 		""" 
 		Method which is executed before exiting the state BUILDWORLD. This method generates the 
-		environment by calling the method build_environment() defined in the helper node. 
+		environment. First of all, informations from aruco markers are retreived, looping until
+		all of them are detected (7 markers). Once they have been detected, the build_environment()
+		method is called to put informations on the already given ontology using the Armor server.
 		When the environment is built, the transition to the next state occurs.
 		
 		Args:
@@ -228,7 +230,7 @@ class Reasoner(smach.State):
 		Method which is executed before exiting the state REASONER. This function makes the robot
 		reason in order to achieve the wanted behavior for the surveillance robot, by calling the
 		method reason() defined in the helper node. When the robot finishes to query the ontology, 
-		the power level of the battery is checked. If the battery is low, the next 
+		the power level of the battery is checked. If the battery gets low during execution, the next 
 		state to be executed will be REACHCHARGE, else it will be executed the MOTION state.
 		
 		Args:
@@ -278,7 +280,14 @@ class Motion(smach.State):
 			
 	def execute(self, userdata):
 		""" 
-		Function which is executed before exiting the state MOTION. 
+		Function which is executed before exiting the state MOTION. This method allows to make the robot
+		create a path to go from its current postion to the desired position retrieved thanks to the 
+		REASONER. It also controls that the robot follows the programmed path during the whole duration
+		of the motion. Therefore, the robot goes autonomusly from the current position to the goal.
+		This is possible thanks to a SLAM algoithm which localizes the robot in the environment and maps
+		the sorroundings. 
+		The action is completed when the robot reaches the target. If the battery gets low during execution, 
+		the next state to be executed will be REACHCHARGE, else it will be executed the SURVEILLANCE state.
 		
 		Args:
 			self: instance of the current class.
@@ -328,9 +337,10 @@ class Surveillance(smach.State):
 		""" 
 		Method which is executed before exiting the state SURVEILLANCE. This method simulates a
 		surveillance task when the robot arrives at a specific location.
-		It wastes time while it cyclically checks the state of the battery.
-		If the battery is low, the next state to be executed will be REACHCHARGE, else it will be 
-		executed the REASONER state.
+		It makes the base joint of the arm rotate around itself of 360 dergees, while the camera
+		placed on the top of the arm acquires images. Meanwhile, the state of the battery is checked.
+		If the battery gets low during execution, the next state to be executed will be REACHCHARGE, 
+		else it will be executed the REASONER state.
 		
 		Args:
 			self: instance of the current class.

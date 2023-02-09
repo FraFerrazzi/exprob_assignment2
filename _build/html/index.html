@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to exprob_assignment2’s documentation! &mdash; exprob_assignment2 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> exprob_assignment2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Welcome to exprob_assignment2’s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#module-scripts.state_machine">State Machine Module</a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.BuildWorld"><code class="docutils literal notranslate"><span class="pre">BuildWorld</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.BuildWorld.execute"><code class="docutils literal notranslate"><span class="pre">BuildWorld.execute()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts.state_machine.Charge"><code class="docutils literal notranslate"><span class="pre">Charge</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.Charge.execute"><code class="docutils literal notranslate"><span class="pre">Charge.execute()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts.state_machine.Motion"><code class="docutils literal notranslate"><span class="pre">Motion</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.Motion.execute"><code class="docutils literal notranslate"><span class="pre">Motion.execute()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts.state_machine.ReachCharge"><code class="docutils literal notranslate"><span class="pre">ReachCharge</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.ReachCharge.execute"><code class="docutils literal notranslate"><span class="pre">ReachCharge.execute()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts.state_machine.Reasoner"><code class="docutils literal notranslate"><span class="pre">Reasoner</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.Reasoner.execute"><code class="docutils literal notranslate"><span class="pre">Reasoner.execute()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts.state_machine.Surveillance"><code class="docutils literal notranslate"><span class="pre">Surveillance</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.state_machine.Surveillance.execute"><code class="docutils literal notranslate"><span class="pre">Surveillance.execute()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scripts.state_machine.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-scripts.robot_battery_state">Robot Battery State Module</a><ul>
+<li><a class="reference internal" href="#scripts.robot_battery_state.RobotBatteryState"><code class="docutils literal notranslate"><span class="pre">RobotBatteryState</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.robot_battery_state.RobotBatteryState.battery_charger"><code class="docutils literal notranslate"><span class="pre">RobotBatteryState.battery_charger()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.robot_battery_state.RobotBatteryState.is_battery_low"><code class="docutils literal notranslate"><span class="pre">RobotBatteryState.is_battery_low()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.robot_battery_state.RobotBatteryState.manual_battery_notifier"><code class="docutils literal notranslate"><span class="pre">RobotBatteryState.manual_battery_notifier()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.robot_battery_state.RobotBatteryState.print_info"><code class="docutils literal notranslate"><span class="pre">RobotBatteryState.print_info()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.robot_battery_state.RobotBatteryState.random_battery_notifier"><code class="docutils literal notranslate"><span class="pre">RobotBatteryState.random_battery_notifier()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-utilities.exprob_assignment2.state_machine_helper">State Machine Helper Module</a><ul>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper"><code class="docutils literal notranslate"><span class="pre">Helper</span></code></a><ul>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.aruco_done"><code class="docutils literal notranslate"><span class="pre">Helper.aruco_done()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.battery_callback"><code class="docutils literal notranslate"><span class="pre">Helper.battery_callback()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.build_environment"><code class="docutils literal notranslate"><span class="pre">Helper.build_environment()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.cancel_motion"><code class="docutils literal notranslate"><span class="pre">Helper.cancel_motion()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.charge_ready"><code class="docutils literal notranslate"><span class="pre">Helper.charge_ready()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.check_motion"><code class="docutils literal notranslate"><span class="pre">Helper.check_motion()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.do_surveillance"><code class="docutils literal notranslate"><span class="pre">Helper.do_surveillance()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.explore_init_room"><code class="docutils literal notranslate"><span class="pre">Helper.explore_init_room()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.go_to_charge"><code class="docutils literal notranslate"><span class="pre">Helper.go_to_charge()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.go_to_goal"><code class="docutils literal notranslate"><span class="pre">Helper.go_to_goal()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.handle_world_init"><code class="docutils literal notranslate"><span class="pre">Helper.handle_world_init()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.motion_done"><code class="docutils literal notranslate"><span class="pre">Helper.motion_done()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.reason"><code class="docutils literal notranslate"><span class="pre">Helper.reason()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.reason_done"><code class="docutils literal notranslate"><span class="pre">Helper.reason_done()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.recharge_srv"><code class="docutils literal notranslate"><span class="pre">Helper.recharge_srv()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.reset_var"><code class="docutils literal notranslate"><span class="pre">Helper.reset_var()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.ret_battery_low"><code class="docutils literal notranslate"><span class="pre">Helper.ret_battery_low()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.surveillance_done"><code class="docutils literal notranslate"><span class="pre">Helper.surveillance_done()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.Helper.world_done"><code class="docutils literal notranslate"><span class="pre">Helper.world_done()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.ontology_format"><code class="docutils literal notranslate"><span class="pre">ontology_format()</span></code></a></li>
+<li><a class="reference internal" href="#utilities.exprob_assignment2.state_machine_helper.ontology_manager"><code class="docutils literal notranslate"><span class="pre">ontology_manager()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#marker-server">Marker Server</a></li>
+<li><a class="reference internal" href="#aruco-detection">Aruco Detection</a></li>
+<li><a class="reference internal" href="#move-cam">Move Cam</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">exprob_assignment2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Welcome to exprob_assignment2’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="welcome-to-exprob-assignment2-s-documentation">
+<h1>Welcome to exprob_assignment2’s documentation!<a class="headerlink" href="#welcome-to-exprob-assignment2-s-documentation" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="module-scripts.state_machine">
+<span id="state-machine-module"></span><h1>State Machine Module<a class="headerlink" href="#module-scripts.state_machine" title="Permalink to this heading"></a></h1>
+<span class="target" id="module-state_machine"></span><p>ROS node for the second assignment of the Experimental Robotics course of the Robotics Engineering
+Master program. The software architecture allows initializing a Final State Machine which controls
+the behavior of a surveillance robot.
+The scenario involves a robot deployed in an indoor environment for surveillance purposes.
+The robot’s objective is to visit different locations, which are rooms and corridors, and stay there
+for some time. The robot starts in the E, which is the charging location, and waits until it receives
+the information to build the topological map. The robot moves to a new location and do a surveillance
+task before it checks another location. This behavior is repeated until the program is not shut down.
+When the robot’s battery is low, it goes to the charging location and waits some time before it starts
+again the just explained behavior. When the robot’s battery is not low, it should move among locations
+with the following policy:
+1) It should mainly stay in corridors.
+2) If a reachable room has not been visited for a fixed time, the room becomes urgent and the robot visits it.
+The subscriptions, publishers, services, and service actions are defined and utilized in the helper node of
+the final state machine called final_state_machine.py..</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.BuildWorld">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">BuildWorld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#BuildWorld"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.BuildWorld" title="Permalink to this definition"></a></dt>
+<dd><p>Class that defines the state: BUILDWORLD.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.BuildWorld.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#BuildWorld.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.BuildWorld.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Method which is executed before exiting the state BUILDWORLD. This method generates the
+environment. First of all, informations from aruco markers are retreived, looping until
+all of them are detected (7 markers). Once they have been detected, the build_environment()
+method is called to put informations on the already given ontology using the Armor server.
+When the environment is built, the transition to the next state occurs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>userdata</strong> – shared variable between the states of the Final State Machine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the transition to go from the BUILDWORLD state to the REASONER state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TRANS_WORLD_DONE</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Charge">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Charge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Charge" title="Permalink to this definition"></a></dt>
+<dd><p>Class that defines the state: CHARGE.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Charge.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Charge.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Charge.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Method which is executed before exiting the state CHARGE. This method makes the robot
+charge itself relying on the method recharge_srv() defined in the helper node.
+When the battery is charged, the transition to the next state occurs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>userdata</strong> – shared variable between the states of the Final State Machine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the transition to go from the CHARGE state to the REASONER state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TRANS_BATTERY_OK</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Motion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Motion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Motion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Motion" title="Permalink to this definition"></a></dt>
+<dd><p>Class that defines the state: MOTION.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Motion.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Motion.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Motion.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Function which is executed before exiting the state MOTION. This method allows to make the robot
+create a path to go from its current postion to the desired position retrieved thanks to the
+REASONER. It also controls that the robot follows the programmed path during the whole duration
+of the motion. Therefore, the robot goes autonomusly from the current position to the goal.
+This is possible thanks to a SLAM algoithm which localizes the robot in the environment and maps
+the sorroundings.
+The action is completed when the robot reaches the target. If the battery gets low during execution,
+the next state to be executed will be REACHCHARGE, else it will be executed the SURVEILLANCE state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>userdata</strong> – shared variable between the states of the Final State Machine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the transition to go from the MOTION state to the REACHCHARGE state.
+TRANS_CHECK_LOC: is the transition to go from the MOTION state to the SURVEILLANCE state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TRANS_BATTERY_LOW</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.ReachCharge">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">ReachCharge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#ReachCharge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.ReachCharge" title="Permalink to this definition"></a></dt>
+<dd><p>Class that defines the state: REACHCHARGE.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.ReachCharge.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#ReachCharge.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.ReachCharge.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Method which is executed before exiting the state REACHCHARGE. This method makes the
+robot go to the charging location ‘E’ by calling the method go_to_charge() defined in
+the helper node.
+When the robot reaches the charging location, the transition to the next state occurs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>userdata</strong> – shared variable between the states of the Final State Machine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the transition to go from the REACHCHARGE state to the CHARGE state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TRANS_CHARGE_ON</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Reasoner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Reasoner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Reasoner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Reasoner" title="Permalink to this definition"></a></dt>
+<dd><p>Class that defines the state: REASONER.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Reasoner.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Reasoner.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Reasoner.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Method which is executed before exiting the state REASONER. This function makes the robot
+reason in order to achieve the wanted behavior for the surveillance robot, by calling the
+method reason() defined in the helper node. When the robot finishes to query the ontology,
+the power level of the battery is checked. If the battery gets low during execution, the next
+state to be executed will be REACHCHARGE, else it will be executed the MOTION state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>userdata</strong> – shared variable between the states of the Final State Machine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the transition to go from the REASONER state to the REACHCHARGE state.
+TRANS_INFO_DONE: is the transition to go from the REASONER state to the MOTION state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TRANS_BATTERY_LOW</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.state_machine.Surveillance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">Surveillance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Surveillance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Surveillance" title="Permalink to this definition"></a></dt>
+<dd><p>Class that defines the state: SURVEILLANCE.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.state_machine.Surveillance.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#Surveillance.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.Surveillance.execute" title="Permalink to this definition"></a></dt>
+<dd><p>Method which is executed before exiting the state SURVEILLANCE. This method simulates a
+surveillance task when the robot arrives at a specific location.
+It makes the base joint of the arm rotate around itself of 360 dergees, while the camera
+placed on the top of the arm acquires images. Meanwhile, the state of the battery is checked.
+If the battery gets low during execution, the next state to be executed will be REACHCHARGE,
+else it will be executed the REASONER state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>userdata</strong> – shared variable between the states of the Final State Machine</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the transition to go from the SURVEILLANCE state to the REACHCHARGE state.
+TRANS_CHECK_DONE: is the transition to go from the SURVEILLANCE state to the REASONER state.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TRANS_BATTERY_LOW</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.state_machine.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.state_machine.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/state_machine.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.state_machine.main" title="Permalink to this definition"></a></dt>
+<dd><p>This method initializes the Final State Machine of the node state_machine.py using the SMACH
+modules. Some documentation can be found online at the following link: <a class="reference external" href="http://wiki.ros.org/smach/">smach</a>.
+Every state of the node relies on the node state_machine_helper.py, in fact, an instance of the
+Helper() situated on the node state_machine_helper.py is passed to every state of the FSM.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.robot_battery_state">
+<span id="robot-battery-state-module"></span><h1>Robot Battery State Module<a class="headerlink" href="#module-scripts.robot_battery_state" title="Permalink to this heading"></a></h1>
+<span class="target" id="module-robot_battery_state"></span><p>ROS node for the second assignment of the Experimental Robotics course of the Robotics Engineering
+Master program. The software architecture allows the control of the battery level of the robot.
+This node publishes the state of the battery on the topic /state/battery_low. The transition of
+the battery level from high to low can happen in two different ways.
+The first one is to set battery_low = True after a random delay defined in the architecture.
+The second one is to set battery_low = True manually, retrieving the input from the user.
+When the battery becomes low, the transition is published.
+The node also implements a service responsible for charging the robot when the battery becomes low.
+The service is blocking and after the battery is charged, the response is sent to the client.</p>
+<dl class="simple">
+<dt>Publishes to:</dt><dd><p>/state/battery_low the battery level of the robot</p>
+</dd>
+<dt>Service:</dt><dd><p>/state/recharge to charge the robot</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.robot_battery_state.RobotBatteryState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.robot_battery_state.</span></span><span class="sig-name descname"><span class="pre">RobotBatteryState</span></span><a class="reference internal" href="_modules/scripts/robot_battery_state.html#RobotBatteryState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_battery_state.RobotBatteryState" title="Permalink to this definition"></a></dt>
+<dd><p>This class implements the robot battery state manager, which is responsible for setting the battery
+state to low and recharge the battery once the robot is in the charge location ‘E’.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.robot_battery_state.RobotBatteryState.battery_charger">
+<span class="sig-name descname"><span class="pre">battery_charger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_battery_state.html#RobotBatteryState.battery_charger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_battery_state.RobotBatteryState.battery_charger" title="Permalink to this definition"></a></dt>
+<dd><p>Service used to charge the battery of the robot. Once the client gives a request to the
+server, the server waste time to simulate the charging action for the robot’s battery, which
+duration lasts between (self._random_battery_charge[0], self._random_battery_charge[1]).
+After this time has elapsed, the server sets the battery to high and returns a response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>request</strong> – is the boolean value used to state that the charging task should start.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the boolean value used to state that the cahrging task ended.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>response</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.robot_battery_state.RobotBatteryState.is_battery_low">
+<span class="sig-name descname"><span class="pre">is_battery_low</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_battery_state.html#RobotBatteryState.is_battery_low"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_battery_state.RobotBatteryState.is_battery_low" title="Permalink to this definition"></a></dt>
+<dd><p>This method publishes the changes of the battery status. It runs on a separate
+thread.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.robot_battery_state.RobotBatteryState.manual_battery_notifier">
+<span class="sig-name descname"><span class="pre">manual_battery_notifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_battery_state.html#RobotBatteryState.manual_battery_notifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_battery_state.RobotBatteryState.manual_battery_notifier" title="Permalink to this definition"></a></dt>
+<dd><p>Allows a keyboard interaction with the user to emulate the change of the battery level.
+The message is published through the ‘publisher’ input parameter which is a boolean
+value, i.e. ‘True’: battery low.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>publisher</strong> – is the boolean value used to state the power level of the battery.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.robot_battery_state.RobotBatteryState.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_battery_state.html#RobotBatteryState.print_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_battery_state.RobotBatteryState.print_info" title="Permalink to this definition"></a></dt>
+<dd><p>Method which prints log informations only when the random testing is active.
+This is done to allow an intuitive usage of the keyboard-based interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>msg</strong> – is the message that will be given to the logger.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.robot_battery_state.RobotBatteryState.random_battery_notifier">
+<span class="sig-name descname"><span class="pre">random_battery_notifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/robot_battery_state.html#RobotBatteryState.random_battery_notifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.robot_battery_state.RobotBatteryState.random_battery_notifier" title="Permalink to this definition"></a></dt>
+<dd><p>Publishes when the battery becomes low based on a random delay, within the interval
+([<cite>self._random_battery_time[0]</cite>, <cite>self._random_battery_time[1]</cite>).
+The message is published through the ‘publisher’ input parameter which is a boolean
+value, i.e. ‘True’: battery low.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>publisher</strong> – is the boolean value used to state the power level of the battery.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-utilities.exprob_assignment2.state_machine_helper">
+<span id="state-machine-helper-module"></span><h1>State Machine Helper Module<a class="headerlink" href="#module-utilities.exprob_assignment2.state_machine_helper" title="Permalink to this heading"></a></h1>
+<span class="target" id="module-state_machine_helper"></span><p>ROS node for the second assignment of the Experimental Robotics course of the Robotics Engineering
+Master program. The software architecture allows initializing a helper class for the Final State Machine
+which controls the behavior of a surveillance robot.
+This node allows to have cleaner and more readable code in the state_machine.py node, in fact, every task
+called in the previously mentioned code is defined in the current node.</p>
+<dl class="simple">
+<dt>Publishes to:</dt><dd><p>/cmd_vel to xontrol the velocities of the wheels of the robot
+/robot/joint1_position_controller/command to make the base joint of the arm rotate</p>
+</dd>
+<dt>Subscribes to:</dt><dd><p>/state/battery_low where the state of the battery is published</p>
+</dd>
+<dt>Service:</dt><dd><p>/state/recharge to charge the robot
+/armor_interface_srv to communicate with the ontology
+/world_init to get the informations of the rooms from aruco markers</p>
+</dd>
+<dt>Action Service:</dt><dd><p>/move_base to make the robot move autonomusly in the environemnt</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utilities.exprob_assignment2.state_machine_helper.</span></span><span class="sig-name descname"><span class="pre">Helper</span></span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper" title="Permalink to this definition"></a></dt>
+<dd><p>This class is created to decouple the implementation of the Finite State Machine, allowing to have a
+more readable and cleaner code in the state_machine.py node. This class manages the synchronization
+with subscribers, services and action servers to achieve the correct behavior.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.aruco_done">
+<span class="sig-name descname"><span class="pre">aruco_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.aruco_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.aruco_done" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible for stating that all markers have been detected
+and the informations from arucos can be used to update the ontology.
+The returning value will be <cite>True</cite> if all the arucos have been detected, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states the status of the detection of arucos.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.aruco_detected</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.battery_callback">
+<span class="sig-name descname"><span class="pre">battery_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.battery_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.battery_callback" title="Permalink to this definition"></a></dt>
+<dd><p>It is the callback that manages the subscriber to the topic: /state/battery_low to retrieve
+the state of the battery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>msg</strong> – is the subscriber to the topic /state/battery_low to get the state of the battery.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.build_environment">
+<span class="sig-name descname"><span class="pre">build_environment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.build_environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.build_environment" title="Permalink to this definition"></a></dt>
+<dd><p>Method that initializes the environment ontology using the ARMOR service.
+Once all markers have been detected, this method is called to upload all the new informations about
+each room to the ontology. In this way, using the armor service, it is possible to initialize and
+define everything that will be needed to guarantee the correct behavior of the program.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.cancel_motion">
+<span class="sig-name descname"><span class="pre">cancel_motion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.cancel_motion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.cancel_motion" title="Permalink to this definition"></a></dt>
+<dd><p>This function cancels pending goals that are sent to the MoveBase action service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.charge_ready">
+<span class="sig-name descname"><span class="pre">charge_ready</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.charge_ready"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.charge_ready" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible for stating that the robot is ready to be
+charged once the location ‘E’ is reached.
+The returning value will be <cite>True</cite> if the charge location is reached, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states if the charging location is reached.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.charge_reached</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.check_motion">
+<span class="sig-name descname"><span class="pre">check_motion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.check_motion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.check_motion" title="Permalink to this definition"></a></dt>
+<dd><p>This method checks if the robot arrives at the desired location checking the state of the MoveBase
+action service, which must be equal to DONE.
+When it is done, the ontology is updated.
+Firt of all the robot is placed in the new location in the ontology. Also, the timestamp of the robot
+is updated, as well as the timestamp of the goal location. This allows to make the robot behave as
+expected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.do_surveillance">
+<span class="sig-name descname"><span class="pre">do_surveillance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.do_surveillance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.do_surveillance" title="Permalink to this definition"></a></dt>
+<dd><p>It simulates a survaillance task of the location in which the robot arrives.
+The camera of the robot is rotated of 360 dergees about its axis. In this way the robot
+can have a clear view of the sorroundings. The camera rotates thatnks to base joint located
+at the base of the arm.
+While it explores the location, also the status of the battery is checked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.explore_init_room">
+<span class="sig-name descname"><span class="pre">explore_init_room</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.explore_init_room"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.explore_init_room" title="Permalink to this definition"></a></dt>
+<dd><p>Method that allows the robot to rotate on itself when the ontology has been fully uploaded.
+This is done in the initial room, before allowing the robot to reason about the environemnt.
+The aim is to make the robot understand the sorroundings and give it time to upload the map
+in Rviz so it does not run into walls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.go_to_charge">
+<span class="sig-name descname"><span class="pre">go_to_charge</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.go_to_charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.go_to_charge" title="Permalink to this definition"></a></dt>
+<dd><p>Function that allows the robot to go to the charging location before it starts the
+charging routine.
+When the robot’s battery is low, it gets as target location the charging station
+and moves towards it. It calls the self.go_to_goal method to reach the location.
+The variable charge_reached is set to True once the robot is in room ‘E’ and, therefore,
+the robot is ready to be charged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.go_to_goal">
+<span class="sig-name descname"><span class="pre">go_to_goal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.go_to_goal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.go_to_goal" title="Permalink to this definition"></a></dt>
+<dd><p>This method allows to define a goal in the sapce according to the Reasoner decision.
+Once the _next_goal is defined, its coordinates in space are retrieved and are given to the
+MoveBase action service.
+MoveBase allows to find a path between the robot and the goal, keeping into account the environment
+and possible obstacles thanks to a SLAM algorithm.
+This path is followed by the robot and can be adjusted real-time during execution if a new obstacle
+is seen by sensors. MoveBase also checks that the robot keeps following the desired path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.handle_world_init">
+<span class="sig-name descname"><span class="pre">handle_world_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.handle_world_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.handle_world_init" title="Permalink to this definition"></a></dt>
+<dd><p>Service used to get the map informations. The informations are taken from aruco markers once they
+are detected.
+The informations retrieved are later used to build the ontology of the environemnt to allow the robot to
+move around the indoor scenario behaving as expected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – instance of the current class.</p></li>
+<li><p><strong>request</strong> – string and float values to state the name of the room, the coordinates in space</p></li>
+<li><p><strong>connections</strong> (<em>and the</em>) – </p></li>
+<li><p><strong>connected.</strong> (<em>concerning the door the other room at which it is</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool value to state if the information has been retrieved</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>response</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.motion_done">
+<span class="sig-name descname"><span class="pre">motion_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.motion_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.motion_done" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible of stating the status of the robot’s motion.
+The returning value will be <cite>True</cite> if the goal has been reached, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states the status of the motion.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.motion_completed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.reason">
+<span class="sig-name descname"><span class="pre">reason</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.reason"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.reason" title="Permalink to this definition"></a></dt>
+<dd><p>Method that communicates with the ontology already created to retrieve information
+and decide, based on the desired surveillance behavior, where the robot should move next.
+First of all, reachable rooms and their status (e.g. ROOM, URGENT, CORRIDOR) are retrieved.
+Then, each reachable room is checked and the robot will move first in URGENT locations.
+If there are no URGENT locations, it stays on CORRIDORS. If there are no CORRIDORS the robot
+moves to a random ROOM. In the end, the next location that will be visited is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the next location that will be reached decided by the reasoner.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self._next_goal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.reason_done">
+<span class="sig-name descname"><span class="pre">reason_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.reason_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.reason_done" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible for stating the completion of the reasoning
+phase achieved using the ARMOR service to retrieve informations from the ontology.
+The returning value will be <cite>True</cite> if the reasoner is done, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states the status of the reasoner.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.reasoner_done</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.recharge_srv">
+<span class="sig-name descname"><span class="pre">recharge_srv</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.recharge_srv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.recharge_srv" title="Permalink to this definition"></a></dt>
+<dd><p>Blocking service used to charge the battery of the robot. Once the battery is low
+and the robot is in the charging location, a request is sent to the service which
+charges the battery after a defined time and gets a result as soon as it is charged.
+When the service is done, the battery of the robot is set to high by putting the variable
+battery_low to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.reset_var">
+<span class="sig-name descname"><span class="pre">reset_var</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.reset_var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.reset_var" title="Permalink to this definition"></a></dt>
+<dd><p>It is used to reset all the variables used to decide when a task has finished its execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.ret_battery_low">
+<span class="sig-name descname"><span class="pre">ret_battery_low</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.ret_battery_low"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.ret_battery_low" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible for stating the power level of the battery
+of the robot.
+The returning value will be <cite>True</cite> if the battery is low, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states the status of the battery.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.battery_low</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.surveillance_done">
+<span class="sig-name descname"><span class="pre">surveillance_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.surveillance_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.surveillance_done" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible of stating the status of the surveillance task.
+The returning value will be <cite>True</cite> if the robot has checked the location, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states the status of the surveillance task.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.check_completed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.Helper.world_done">
+<span class="sig-name descname"><span class="pre">world_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#Helper.world_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.Helper.world_done" title="Permalink to this definition"></a></dt>
+<dd><p>Get the value of the variable responsible for stating the creation of the environment
+using the ARMOR service to define the ontology.
+The returning value will be <cite>True</cite> if the map was created, <cite>False</cite> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self</strong> – instance of the current class.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool value that states the status of the generation of the map.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self.map_completed</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.ontology_format">
+<span class="sig-prename descclassname"><span class="pre">utilities.exprob_assignment2.state_machine_helper.</span></span><span class="sig-name descname"><span class="pre">ontology_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#ontology_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.ontology_format" title="Permalink to this definition"></a></dt>
+<dd><p>Function that takes as input a list and returns a new one, which starts from the old one.
+The new list takes every element of the old list, starting from the index specified by ‘start’
+and finishing at the index specified by ‘end’. In this way, only characters and numbers in
+indexes that are between ‘start’ and ‘end’ will be copied into the new list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_list</strong> – is the list that needs to be formatted.</p></li>
+<li><p><strong>start</strong> – starting list’s element index that will be copied to the new list.</p></li>
+<li><p><strong>end</strong> – ending list’s element index that will be copied to the new list.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>is the correctly formatted list.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>new_list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.exprob_assignment2.state_machine_helper.ontology_manager">
+<span class="sig-prename descclassname"><span class="pre">utilities.exprob_assignment2.state_machine_helper.</span></span><span class="sig-name descname"><span class="pre">ontology_manager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primary_command_spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secondary_command_spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ARGS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utilities/exprob_assignment2/state_machine_helper.html#ontology_manager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utilities.exprob_assignment2.state_machine_helper.ontology_manager" title="Permalink to this definition"></a></dt>
+<dd><p>Function used to communicate with the ARMOR service to set and retrieve informations of the ontology
+regarding the environment. This function is used instead of the ARMOR API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>command</strong> – it is the command to execute (e.g. ADD, LOAD, …).</p></li>
+<li><p><strong>primary_command_spec</strong> – it is the primary command specification (optional).</p></li>
+<li><p><strong>secondary_command_spec</strong> – it is the secondary command specification (optional).</p></li>
+<li><p><strong>ARGS</strong> – it is the list of arguments (e.g. list of individuals to add).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>it returns a list of queried objects.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>armorontology_res</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="marker-server">
+<h1>Marker Server<a class="headerlink" href="#marker-server" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenfile: Unable to find project ‘exprob_assignment2’ in breathe_projects dictionary</p>
+</div>
+</div>
+<div class="section" id="aruco-detection">
+<h1>Aruco Detection<a class="headerlink" href="#aruco-detection" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenfile: Unable to find project ‘exprob_assignment2’ in breathe_projects dictionary</p>
+</div>
+</div>
+<div class="section" id="move-cam">
+<h1>Move Cam<a class="headerlink" href="#move-cam" title="Permalink to this heading"></a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenfile: Unable to find project ‘exprob_assignment2’ in breathe_projects dictionary</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Francesco Ferrazzi.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
