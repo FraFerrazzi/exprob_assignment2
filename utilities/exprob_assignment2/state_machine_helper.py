@@ -239,6 +239,8 @@ class Helper:
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			log_msg = f'COORDINATES:\n{self._rooms_coord}'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+			log_msg = f'CONNCETIONS:\n{self._connections}'
+			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			log_msg = f'############################################'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.aruco_detected = True     
@@ -274,6 +276,13 @@ class Helper:
 		"""
 		# Get the number of rooms
 		rooms_number = range(0,len(self._rooms))
+		# Get the number of connections
+		connections_number = range(0,len(self._connections))
+		# Link doors and rooms according to the connections informations
+		for con in connections_number:
+			ARGS = ['hasDoor', self._connections[con][0], self._connections[con][1]]
+			ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)
+			print(self._connections[con][0], self._connections[con][1])	
 		# Disjoint rooms and doors
 		ARGS = self._rooms + self._doors + ['Robot1']
 		ontology_manager('DISJOINT', 'IND', '', ARGS)
