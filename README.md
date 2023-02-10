@@ -10,19 +10,25 @@ Click on the following link https://fraferrazzi.github.io/exprob_assignment2/ to
 
 ## Introduction
 
-This repository contains ROS-based software architecture that simulates a robot used for surveillance purposes.
+This repository contains ROS-based software architecture that simulates a robot used for surveillance purposes. \
 The robot is placed inside a given indoor environment. \
-First of all, the robot needs to understand its sorroundings by retrieving informations from aruco markers placed in the initial room. These informations contain the names of the rooms, their coordinates in the environment and their connections with other rooms. \
-Once all markers have been detected, the robot's objective is to go around the map, simulating a surveillance task when it gets inside a new location. The robot moves autonomusly in the environment until te battery state becomes low. When the battery is low, the robot goes to the charging location and, once the battery is full, goes back to the surveillance behavior. \
+First of all, the robot needs to understand its surroundings by retrieving information from aruco markers placed in the initial room. The information contains the names of the rooms, their coordinates in the environment, and their connections with other locations. \
+Once all markers have been detected, the robot's objective is to go around the map, simulating a surveillance task when it gets inside a new location. \
+The robot moves autonomously in the environment until the battery state becomes low. When the battery is low, the robot goes to the charging location and, once the battery is full, goes back to the surveillance behavior. \
 The program interacts with an ontology to retrieve essential information to achieve the desired behavior. \
 A short video shows the execution of the software architecture:
 
 
 
-In the main terminal, it is visible the execution and the screen output of the `MoveBase` and `Gmapping` algoriths. On the top right, the `state_machine.py` node implements the Final State Machine and shows every transition from one state to another to achieve the desired behavior of the program. The choice was to keep the User Interface not too complex and with few outputs for each state. This was done to avoid too much information on the screen that could confuse the reader. In general, at each step is shown: the current state that is being executed, the most important things that the state does, and the transition to the next state. \
-On the right, other three xterm windows appear once the program is launched. The window at the top is the `aruco_detection.cpp` which shows when an aruco marker is detected and every information related to it. The one in the middle represents the `move_cam.cpp` node and shows the motion of the arm placed on the robot. As soon as every marker gets detected, these two nodes are shutdown. The one at the bottom is the `robot_battery_state.py` and is responsible for generating the `battery_low` signal. It manages also the charging action of the robot when the battery is low. \
-This video reports the execution of the program when the `surveillance2_random.launch` is used. \
-The only difference concerning the `surveillance2_manual.launch` is that the GUI of the `robot_battery_state` node is different compared to the `surveillance2_random.launch`, and the `battery_low` signal is randomly generated using the latter mentioned launch file.
+In the main terminal, it is visible the execution and the screen output of the MoveBase and Gmapping algorithms. \
+On the top right, the state_machine.py node implements the Final State Machine and shows every transition from one state to another to achieve the desired behavior of the program. The choice was to keep the User Interface not too complex and with few outputs for each state. This was done to avoid too much information on the screen that could confuse the reader. In general, the following steps are shown: the current state that is being executed, the most important actions regarding the state, and the transition to the next state. \
+On the right, the other three xterm windows appear once the program is launched. \
+The window at the top is the aruco_detection.cpp which shows when an aruco marker is detected and every information related to it. \
+The one in the middle represents the move_cam.cpp node and shows the motion of the arm placed on the robot. \
+As soon as every marker gets detected, these two nodes are shut down. \
+The one at the bottom is the robot_battery_state.py and is responsible for generating the battery_low signal. It manages also the charging action of the robot when the battery is low. \
+This video reports the execution of the program when the surveillance2_random.launch is used. \
+The only difference concerning the surveillance2_manual.launch is that the GUI of the robot_battery_state node is different compared to the surveillance2_random.launch, and the battery_low signal is randomly generated using the latter mentioned launch 
 
 ## How to run
 
@@ -49,31 +55,46 @@ Use the following command to launch the software with randomized stimulus for th
 roslaunch exprob_assignemnt1 surveillance2_random.launch
 ```
 
-Four new terminal windows are going to be opened, making a total of five open windows when the progam gets launched. \
-One corresponds to the `state_machine.py` GUI which gives visual feedback on what is happening during the execution of the software architecture. One shows a user interface regarding the battery level, controlled by the `robot_battery_state.py` node, which stimuli can be both randomic or manual depending on the launch file used to run the project.
-The other two display the behavior of the `aruco_detection.cpp` and the `move_cam.cpp`. The former allows to see when a marker is detected and its informations, whereas the latter states the correct functioning of the arm's motion. \
-The fifth window is the one of the main terminal where warnings coming from `MoveBase` and `Gmapping` are printed.
+Four new terminal windows are going to be opened, making a total of five open windows when the program gets launched. \
+One corresponds to the `state_machine.py` GUI which gives visual feedback on what is happening during the execution of the software architecture. One shows a user interface regarding the battery level, controlled by the `robot_battery_state.py` node, which stimuli can be both random or manual depending on the launch file used to run the project.
+The other two display the behavior of the `aruco_detection.cpp` and the `move_cam.cpp`. The former allows seeing when a marker is detected and its information, whereas the latter states the correct functioning of the arm's motion. \
+The fifth window regards the main terminal where warnings coming from `MoveBase` and `Gmapping` are printed.
 
 ---
 
 ## Description
 
-The project consists in creating the software architecture for a surveillance robot located inside an indoor environment. \
-The layout of the environment is randomly generated, but its structure remains the same.
-It has 4 rooms, 3 corridors, and 7 doors and can be seen in the following image:
+The project consists of a software architecture for a surveillance robot located inside a given indoor environment. \
+The robot builds the "semantic" map of the environment by detecting, without moving the base of the robot, all seven markers that are present in the initial location. After that, the robot starts the patrolling algorithm by relying on autonomous navigation strategies (mapping/planning) and the information collected and stored in the ontology during the previous step. When a room is reached, it performs a complete scan of the room. \
+When the battery of the robot is low, it goes to the charging station and waits until it is full again before continuing the surveillance task.
+
+### Environemnt
+
+The environment is characterized by: 4 rooms, 3 corridors, and 7 doors. The following image shows the environment:
 
 
 
 The difference between rooms and corridors is that a corridor has more than one door, allowing communication with multiple rooms. \
-This map is generated by interacting with an ontology defined using the software [Protèjè](https://protege.stanford.edu) and the [Armor](https://github.com/EmaroLab/armor) ontology manager. \
-The robot starts in a pre-defined initial location (which is 'E') and waits until the topological map has been correctly initialized and defined. \
-Once the map is completed, the robot moves to a new location and waits some time to simulate a 
-surveillance task. Once the location has been explored, the robot visits another location. \
-When the battery of the robot is low, a charging mechanism is implemented.
-The charging procedure for the robot is to reach the charging location, which is the 'E' corridor, and simulate a charging task by wasting time in that specific location. \
-When the battery is fully charged the robot starts again his defined surveillance behavior. \
-When the robot's battery is not low, the robot moves in the environment according to the following 
-surveillance policy:
+The ontology is defined using the software [Protèjè](https://protege.stanford.edu) and the [Armor](https://github.com/EmaroLab/armor) ontology manager. This allows having knowledge regarding the structure and information of the environment also in the code. 
+
+### Robot Model
+
+The robot used in this project is a four-wheeled mobile robot. The robot is equipped with a laser scanner placed at its front, essential to detect the environment and possible obstacles around it. \
+Also, the robot has an arm with an RGBD camera mounted at the top. The arm can rotate around itself thanks to a continuous joint placed at the base. Also, the camera, used for surveillance and detection purposes, can tilt thanks to a revolute joint which allows getting a better view of the surroundings. \
+The robot is reported below:
+
+
+
+### Behavior
+
+The robot spawns in a pre-defined initial location, which is part of the 'E' corridor, placed at coordinates: (-6.0,11) concerning the map frame. \  First of all, before moving, the robot scans its surroundings thanks to the camera placed at the top of its arm. The initial location has seven markers that need to be detected to retrieve the environmental information. The markers are detected by making the arm rotate 360 degrees and making the camera tilt upwards and downwards while doing so. \
+Once every marker is detected, the ontology is updated and the robot rotates around itself to scan the room thanks to the laser scanner so it does not run into walls. \
+Once this first phase is completed, the robot reasons about the environment and decides on the next room that will be visited according to a specific policy later introduced. The goal is reached by relying on autonomous navigation strategies. While the robot moves, thanks to the SLAM algorithm, the map gets updated in real-time and the path planned to reach the goal can be modified depending on possible detected obstacles. \
+When the robot reaches the target location, a surveillance task begins which performs a complete scan of the room rotating the base of the arm of 360 degrees. Once the location has been scanned, the reasoner phase is called again, and so on. \
+When the battery of the robot becomes low, a charging mechanism is implemented.
+The procedure consists in reaching the charging location, which is the 'E' corridor, and simulating a charging task by wasting time in that specific location. \
+When the battery is fully charged the robot starts again his surveillance behavior. \
+When the robot's battery is not low, the robot moves in the environment according to the following surveillance policy:
 - The robot stays mainly in corridors.
 - If a reachable room has not been visited for some time, it becomes urgent and the robot should visit it.
 
