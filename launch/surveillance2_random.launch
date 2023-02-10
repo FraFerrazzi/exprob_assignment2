@@ -114,8 +114,9 @@
   
   <!-- Set some ros parameters -->
   <rosparam param="test/random_sense/battery_charge"> [15.0, 25.0] </rosparam>
-
   <rosparam param="test/random_sense/battery_time"> [180.0, 195.0] </rosparam>
+  
+  <rosparam param="test/random_sense/active"> True </rosparam>
   
   <!-- launch marker_server node --> 
   <node name="marker_server" pkg="exprob_assignment2" type="marker_server" />
