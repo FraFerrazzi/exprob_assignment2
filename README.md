@@ -119,14 +119,16 @@ During the development of the project, some simplified assumptions were done to 
  - The timestamp of the robot and the timestamp of the location which the robot visits are updated when the robot gets to the issued location, so when the `go_to_goal()` method has done its execution.
  - When the battery status becomes low, the robot reaches the charging location even if it is not reachable at the moment.
  - All the locations inside the map are set to be URGENT when the program is launched, except for the initial location 'E'. The assumption is that the robot has not moved in a long time, therefore has not visited any location for a period longer than the threshold.
+ - All the aruco markers present in the environment are located in the initial room where the robot spawns. Using the information coming from these markers is possible to obtain the full representation and every information concerning the environment. 
  
 ## Limitations
 
 Most of the limitations derive from the hypothesis that were done during the implementation of the software architecture. \
-The fact that the environment is in 2D constrains the map to be allocated only on one floor, without the possibility of having stairs or slopes. Also, the structure is fixed, so it has a pre-defined number of rooms, corridors, and doors. There would be the need to change a bit the code to maintain a reasonable structure for an indoor environment if one of these numbers needs to be changed. \
-The planner and the controller as the surveillance task and the charge of the battery are purely done to waste time, giving limitations to the actual tasks that the robot can perform. For example, the robot can not deduce if there is a person in the room or cannot generate a reasonable path to go from one location to another. \
+The environment is allocated only on one floor, without the possibility of having stairs or slopes. The structure is fixed, so it has a pre-defined number of rooms, corridors, and doors, and there are no moving entities in the environment. The map is static, therefore easier to manage, but this does not allow to have particular stimuli that could trigger an alert signal while the robot is surveilling the environment, e.g. a moving person. \
+The charge of the battery is done to waste time, giving limitations to the actual task that the robot could perform. \
 The robot can only check the urgency of adjacent locations that it can reach in a specific time instant, excluding all the locations that are not reachable in the same time instant. \
-The robot states that a location is urgent only based on the timeslot for which the issued location has not been visited, not caring about other possible stimuli.
+The robot states that a location is urgent only based on the timeslot for which the issued location has not been visited, not caring about other possible stimuli. \
+After every aruco marker has been detected in the initial phase, the nodes for the aruco detection are shut down, therefore if other arucos were placed in the environment the robot would not have the possibility to detect them.
 
 ---
 
