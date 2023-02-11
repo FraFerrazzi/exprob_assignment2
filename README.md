@@ -152,10 +152,10 @@ This repository contains a ROS package named `exprob_assignment2` that includes 
  - [Doxyfile.in](Doxyfile.in): Used to generate the documentation of the code.  
  - [Makefile](Makefile): Used to generate the documentation of the code.  
  - [build/](_build/): Contains the files generated when launching `make_html` for the documentation.
- - [launcher/](launcher/): Contains the configuration to launch this package.
-    - [surveillance2_manual.launch](launcher/surveillance2_manual.launch): It launches this package allowing to manually set when
+ - [launch/](launch/): Contains the configuration to launch this package.
+    - [surveillance2_manual.launch](launch/surveillance2_manual.launch): It launches this package allowing to manually set when
       the battery state becomes low.
-    - [surveillance2_random.launch](launcher/surveillance2_random.launch): It launches this package with 
+    - [surveillance2_random.launch](launch/surveillance2_random.launch): It launches this package with 
       a random-based stimulus for the battery status.
  - [config](config/): Contains the files for configuring the system.
     - [motors_config.yaml](config/motors_config.yaml): Configuration of the controllers for the robot's joints.
@@ -170,7 +170,7 @@ This repository contains a ROS package named `exprob_assignment2` that includes 
  - [scripts/](scripts/): It contains the implementation of the python nodes.
     - [state_machine.py](scripts/state_machine.py): It implements the final state machine for the software architecture.
     - [robot_battery_state.py](scripts/robot_battery_state.py): It implements the management of the robot's battery level.
- - [utilities/exprob_assignment1](utilities/exprob_assignment2/): It contains auxiliary python files, 
+ - [utilities/exprob_assignment2](utilities/exprob_assignment2/): It contains auxiliary python files, 
    which are exploited by the files in the `scripts` folder.
     - [architecture_name_mapper.py](utilities/exprob_assignment2/architecture_name_mapper.py): It contains the name 
       of each *node*, *topic*, *server*, *actions* and *parameters* used in the scripts.
@@ -184,9 +184,9 @@ This repository contains a ROS package named `exprob_assignment2` that includes 
     - [materials.xacro](urdf/materials.xacro): Defines the colors used for each element of the robot.
     - [robot.xacro](urdf/robot.xacro): Defines the structure of the robot.
     - [robot.gazebo](urdf/robot.gazebo): Defines the visualization of the robot in gazebo.
- - [world/](world/): It contains the simulation environment.
+ - [worlds/](worlds/): It contains the simulation environment.
  - [diagrams/](diagrams/): It contains the diagrams shown below in this README file.
- - [doc/](doc/): It contains the files to visualize the Sphinx documentation.
+ - [docs/](docs/): It contains the files to visualize the Sphinx documentation.
  - [topological_map/](topological_map/): It contains the Tbox of the ontology used in this software
    architecture. It is also the repository in which the complete ontology is saved for debugging purposes.
 
