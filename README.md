@@ -217,22 +217,21 @@ The functioning of the program is explained below, using also some explicative d
 
 The first diagram shows the state machine implemented in the code. The figure helps to understand the logic of the project:
 
-<img src="https://github.com/FraFerrazzi/exprob_assignment1/blob/main/diagrams/state_diagram.drawio.png" width="900">
+
 
 The state machine is composed of seven states, which are:
 - `Build World`: state in which the Tbox of the ontology is loaded and then manipulated to create the desired environment according to the request. This state builds the Abox of the ontology. It can be possible to save the ontology for debugging purposes by uncommenting a few lines of code in the `state_machine_helper.py` script (lines: 282-283).
 - `Reasoner`: state that queries the ontology to retrieve essential information used for the surveillance behavior of the robot. The reachable rooms are checked and the robot chooses where to go next based on their urgency or the type of location.
-- `Planner`: state that plans a path of random via points going from the current point to a random target point defined inside the environmental limits. This is not an actual planner but just a dummy implementation created to waste time.
-- `Controller`: state that receives the path composed of via points defined by the planner and wastes some time for each point defined in the path. This is not an actual controller that makes the robot follow the desired path. It is just a dummy implementation of a real controller.
-- `Surveillance`: state in which the robot, once it arrives in a new location, checks the room. This is also a dummy implementation since the state wastes time while it checks if a battery-low stimulus arrives.
-- `Reach Charge`: state that makes the robot reach the charging location when its battery becomes low. This state sets as next location that needs to be reached the charging location 'E' and calls the `planner` and `controller` to simulate the motion of the robot.
+- `Motion`: state that plans a path from the current position of the robot to the goal position. This is possible thanks to the `Move Base` algorithm, which is also capable of modifying the path if new obstacles are detected between the robot and the goal. It also controls the robot to make it follow the generated path.
+- `Surveillance`: state in which the robot, once it arrives in a new location, scans the room. This a dummy implementation since the robot checks the room rotating the camera of 360 degrees but there is not an actual implementation that could react to stimuli.
+- `Reach Charge`: state that makes the robot reach the charging location when its battery becomes low. This state sets as next location that needs to be reached the charging location 'E' and calls the `go_to_goal()` method used also in the `Motion` state to make the robot reach the desired target.
 - `Charge`: state in which the robot charges its battery when it gets low. It is implemented using a blocking service that wastes time simulating the recharge action for a real battery. When the timer expires, the battery of the robot becomes full.
 
 ### Component diagram
 
 In the following image the component diagram is reported:
 
-<img src="https://github.com/FraFerrazzi/exprob_assignment1/blob/main/diagrams/component_diagram.drawio.png" width="800">
+
 
 As shown in the diagram, there are four nodes implemented for the software architecture, plus an additional node (`ARMOR`) which was coded by the [EmaroLab](https://github.com/EmaroLab) group. \ 
 The latter node is essential to guarantee the communication between the ontology, developed with the software [Protèjè](https://protege.stanford.edu), and the ROS scripts created for this project. \
@@ -243,15 +242,15 @@ The other scripts are briefly described below:
 - `controller.py`: it is a node that, given the path of via points created by the planner, simulates the motion of the robot based on a random delay between each point. It is not an actual controller since it does not control the movement of the robot but it is just done to waste time. Communication with the `state_machine.py` node is possible thanks to the `Control.action` action service.
 
 For a better overview of the scripts, I suggest going back to the beginning of this README file and checking the Sphinx documentation. \
-The nodes `robot_battery_state.py`, `planner.py`, and `controller.py` were previously implemented by Professor [buoncubi](https://github.com/buoncubi), foundable in the [arch_skeleton](https://github.com/buoncubi/arch_skeleton) repository. The names of the scripts are respectively: `robot_states.py`, `planner.py`, and `controller.py`. \
-I have made some changes to the previously mentioned scripts to better fit the current software architecture.
+The nodes `robot_battery_state.py` and `marker_server.cpp` were previously implemented by Professor [Buoncompagni](https://github.com/buoncubi), foundable in the [arch_skeleton](https://github.com/buoncubi/arch_skeleton) repository, and Professor [Recchiuto](https://github.com/CarmineD8). \
+I have made few changes to the `robot_battery_state.py` script to better fit the current software architecture.
 
 ### Sequence diagram
 
 The state diagram focuses on the timing of the communication between the different nodes. \
 The beginning corresponds to the instant in which the software architecture is launched. The diagram is shown the case in which `battery_low = False` for one full execution cycle and becomes `battery_low = True` after the `state_machine.py` retrieves from the ARMOR service the information regarding the new location and the updated timestamp.
 
-<img src="https://github.com/FraFerrazzi/exprob_assignment1/blob/main/diagrams/sequence_diagram.drawio.png" width="900">
+
 
 The first action done during execution is creating the Abox of the ontology, achieved by the node `state_machine.py` which sends some requests to the ARMOR service and waits until the environment is correctly created. \
 When the world is ready, the `state_machine.py` node queries the ontology to retrieve essential information regarding the location status (i.e. URGENT, ROOM, CORRIDOR, LOCATION) of the reachable room to allow the reasoner method to implement the surveillance policy of the robot. \
