@@ -112,9 +112,9 @@ During the development of the project, some simplified assumptions were done to 
  - The battery can become low at any time, and the robot immediately reacts to this event. 
  - The battery low is a signal that does not consider the battery's charge level. The signal arrives when a random delay expires.
  - The reasoner state is considered to be atomic. In this way, even if a battery low signal arrives, the ontology query keeps working until it is not done. This decision was made since the robot does not move while it is reasoning and the process lasts a few instants, which is neglectable compared to other actions.
- - When a battery low signal comes, all the previous plans and controls are delayed and the reasoning done by the `reasoner()` method is changed by imposing the charge location as the next room to reach. In this way, the robot must reason again before going to the next location.
+ - When a battery low signal comes, all the previous plans and controls are delayed and the reasoning done by the `reasoner()` method is changed by imposing the charge location as the next room to reach. As soon as the battery is full, the robot must reason again before getting to the next goal.
  - The choice of the next location that will be visited keeps into account only temporal stimulus, excluding data that could come from sensors such as cameras or microphones.
- - The robot scans the location as a surveillance task, making the camera rotate 360 degrees around itself when it reaches the goal.
+ - The robot scans the target location as a surveillance task, making the camera rotate 360 degrees around itself when it reaches the goal.
  - The recharge of the battery does not charge a battery but just wastes time to simulate the task.
  - The timestamp of the robot and the timestamp of the location which the robot visits are updated when the robot gets to the issued location, so when the `go_to_goal()` method has done its execution.
  - When the battery status becomes low, the robot reaches the charging location even if it is not reachable at the moment.
