@@ -128,7 +128,8 @@ The environment is allocated only on one floor, without the possibility of havin
 The charge of the battery is done to waste time, giving limitations to the actual task that the robot could perform. \
 The robot can only check the urgency of adjacent locations that it can reach in a specific time instant, excluding all the locations that are not reachable in the same time instant. \
 The robot states that a location is urgent only based on the timeslot for which the issued location has not been visited, not caring about other possible stimuli. \
-After every aruco marker has been detected in the initial phase, the nodes for the aruco detection are shut down, therefore if other arucos were placed in the environment the robot would not have the possibility to detect them.
+After every aruco marker has been detected in the initial phase, the nodes for the aruco detection are shut down, therefore if other arucos were placed in the environment the robot would not have the possibility to detect them. \
+The model of the robot in the simulation does not concern a real mobile robot. It is just a simplification used for test purposes.
 
 ---
 
@@ -140,35 +141,50 @@ Later on, the general execution of the architecture is discussed with the help o
 
 ### Repository Organization
 
-This repository contains a ROS package named `exprob_assignment1` that includes the following resources.
+This repository contains a ROS package named `exprob_assignment2` that includes the following resources.
  - [CMakeLists.txt](CMakeLists.txt): File to configure this package.
  - [package.xml](package.xml): File to configure this package.
  - [setup.py](setup.py): File to `import` python modules from the `utilities` folder into the 
    files in the `script` folder. 
+ - [make.bat](make.bat): Used to generate the documentation of the code.  
+ - [index.rst](index.rst): Used to generate the documentation of the code.  
+ - [conf.py](conf.py): Used to generate the documentation of the code. 
+ - [Doxyfile.in](Doxyfile.in): Used to generate the documentation of the code.  
+ - [Makefile](Makefile): Used to generate the documentation of the code.  
+ - [build/](_build/): Contains the files generated when launching `make_html` for the documentation.
  - [launcher/](launcher/): Contains the configuration to launch this package.
-    - [surveillance_manual.launch](launcher/surveillance_manual.launch): It launches this package allowing to manually set when
+    - [surveillance2_manual.launch](launcher/surveillance2_manual.launch): It launches this package allowing to manually set when
       the battery state becomes low.
-    - [surveillance_random.launch](launcher/surveillance_random.launch): It launches this package with 
+    - [surveillance2_random.launch](launcher/surveillance2_random.launch): It launches this package with 
       a random-based stimulus for the battery status.
+ - [config](config/): Contains the files for configuring the system.
+    - [motors_config.yaml](config/motors_config.yaml): Configuration of the controllers for the robot's joints.
+    - [robot_config.rviz](config/robot_config.rviz): Configuration of the rviz simulation.
  - [msg/](msg/): It contains the message exchanged through ROS topics.
-    - [Point.msg](msg/Point.msg): It is the message representing a 2D point.
- - [action/](action/): It contains the definition of each action server used by this software.
-    - [Plan.action](action/Plan.action): It defines the target and the current points, the feedback, and the results concerning 
-      motion planning.
-    - [Control.action](action/Control.action): It defines the goal, the feedback, and the results 
-      concerning motion controlling.
- - [scripts/](scripts/): It contains the implementation of each software component.
+    - [RoomConnection.msg](msg/RoomConnection.msg): It is the message defining the connections for each location.
+ - [srv/](srv/): It contains the definition of each service used by this software.
+    - [ArmInfo.srv](srv/ArmInfo.srv): It allows deciding when the robot's arm should stop rotating.
+    - [RoomInformation.srv](srv/RoomInformation.srv): It sends the ID of the detected marker and receives environmental information.
+    - [WorldInit.srv](srv/WorldInit.srv): It sends the environmental information and receives the status of the communication.
+ - [param](param/): Contains the parameter files `.yaml` used by `Move Base` to make the robot move in the environment.
+ - [scripts/](scripts/): It contains the implementation of the python nodes.
     - [state_machine.py](scripts/state_machine.py): It implements the final state machine for the software architecture.
     - [robot_battery_state.py](scripts/robot_battery_state.py): It implements the management of the robot's battery level.
-    - [planner.py](scripts/planner.py): It is a dummy implementation of a motion planner.
-    - [controller.py](scripts/controller.py): It is a dummy implementation of a motion 
-      controller.
- - [utilities/exprob_assignment1](utilities/exprob_assignment1/): It contains auxiliary python files, 
+ - [utilities/exprob_assignment1](utilities/exprob_assignment2/): It contains auxiliary python files, 
    which are exploited by the files in the `scripts` folder.
-    - [architecture_name_mapper.py](utilities/exprob_assignment1/architecture_name_mapper.py): It contains the name 
-      of each *node*, *topic*, *server*, *actions* and *parameters* used in this architecture.
-    - [state_machine_helper.py](utilities/exprob_assignment1/state_machine_helper.py): It contains the methods called in the 
+    - [architecture_name_mapper.py](utilities/exprob_assignment2/architecture_name_mapper.py): It contains the name 
+      of each *node*, *topic*, *server*, *actions* and *parameters* used in the scripts.
+    - [state_machine_helper.py](utilities/exprob_assignment2/state_machine_helper.py): It contains the methods called in the 
       [state_machine.py](scripts/state_machine.py) node to make the code easier and cleaner to read.
+ - [src/](src/): It contains the implementation of the c++ nodes.
+    - [aruco_detection.cpp](src/aruco_detection.cpp): It allows the detection of aruco markers placed in the environment.
+    - [move_cam.cpp](src/move_cam.cpp): It allows to move the arm of the robot for markers detection purposes.
+    - [marker_server.cpp](src/marker_server.cpp): It allows getting the environmental information from the markers.
+ - [urdf/](urdf/): It contains the files to generate the model of the robot.
+    - [materials.xacro](urdf/materials.xacro): Defines the colors used for each element of the robot.
+    - [robot.xacro](urdf/robot.xacro): Defines the structure of the robot.
+    - [robot.gazebo](urdf/robot.gazebo): Defines the visualization of the robot in gazebo.
+ - [world/](world/): It contains the simulation environment.
  - [diagrams/](diagrams/): It contains the diagrams shown below in this README file.
  - [doc/](doc/): It contains the files to visualize the Sphinx documentation.
  - [topological_map/](topological_map/): It contains the Tbox of the ontology used in this software
@@ -187,10 +203,12 @@ functionalities. In addition, it is advised to exploit the [smach_viewer](http:/
 node to visualize and debug the implemented Finite States Machine. \
 Another dependency is [xterm](https://manpages.ubuntu.com/manpages/trusty/man1/xterm.1.html) which allows opening multiple terminals to have a clear view of what every single node does while the program is running. \
 Also, [Armor](https://github.com/EmaroLab/armor) is essential in this project to use the ontology and ensure the desired behavior thought for the software architecture.
+To detect the aruco markers, the sotware architecture relies on [OpenCV](https://opencv.org). Some documentation can be found clicking [here](https://docs.opencv.org/4.x/d9/df8/tutorial_root.html).
 
 ## Software Discussion
 
-The software architecture includes four python scripts, which are: `state_machine.py`, `planner.py`, `controller.py`, and `robot_battery_state.py`. There is an additional script: `state_machine_helper.py`, which implements all the methods called in the `state_machine.py` script. The functioning of the program is explained below, using also some explicative diagrams such as:
+The software architecture includes two python scripts, which are: `state_machine.py` and `robot_battery_state.py`. There is an additional script: `state_machine_helper.py`, which implements all the methods called in the `state_machine.py` script. There are also other three additional nodes implemented in c++, which are: `aruco_detection.cpp`, `move_cam.cpp`. and `marker_server.cpp`. The latter one was implemented by Prof. Recchiuto. \
+The functioning of the program is explained below, using also some explicative diagrams such as:
 - State diagram.
 - Component diagram.
 - Sequence diagram.
@@ -248,20 +266,6 @@ Once the robot is ready to charge itself, a charging request is sent to the `rob
 ## ROS Parameters
 
 This software requires the following ROS parameters.
- 
- - `config/environment_size`: It represents the environment boundaries as a list of two floating
-   numbers, i.e., `[x_max, y_max]`. The environment will have the `x`-th coordinate spanning
-   in the interval `[0, x_max)`, while the `y`-th coordinate in `[0, y_max)`.
-
- - `test/random_plan_points`: It represents the number of via points in a plan. It is a list of n
-   elements, where n is a random value inside the interval: `[min_n, max_n]`. The chosen random value 
-   within such an interval defines the length of each plan.
-
- - `test/random_plan_time`: It represents the time required to compute the next via point by the 
-   planner. The time is chosen randomly inside the `[min_time, max_time]` interval, which is in seconds. 
-
- - `test/random_motion_time`: It represents the time required to reach the next via point. The time 
-   is chosen randomly inside the `[min_time, max_time]` interval, which is in seconds.  
    
  - `test/random_sense/battery_charge`: It indicates the time necessary to recharge the battery of the 
    robot. The time is chosen randomly inside the `[min_time, max_time]` interval, which is in seconds. 
@@ -272,7 +276,7 @@ This software requires the following ROS parameters.
    required. If it is `False`, the parameter below is not used.
  
 
-In addition, the `surveillance_random.launch` also requires the following parameter. This 
+In addition, the `surveillance2_random.launch` also requires the following parameter. This 
 occurs because `test/random_sense/active` has been set to `True`.
 
  - `test/random_sense/battery_time`: It indicates the time that needs to elapse to have a random low 
@@ -284,10 +288,10 @@ occurs because `test/random_sense/active` has been set to `True`.
 
 The improvements regarding this software architecture would be to solve some limitations present in the system, by making more realistic assumptions. \
 A list of possible ideas is reported below:
-- Put sensors on the robot. In this way, it could be possible to make it work in a 3D environment which does not have to be pre-determined. Also, if the robot is equipped with the correct sensors, it could be possible to perform a surveillance action and not just simulate it.
-- The robot can know its position and the position that it needs to reach in the environment. In this way, the `planner()` and the `controller()` methods could give a reasonable path to go from the current location to the target location by a set of via-points, and controlling the wheels of the robot in such a way that it follows the desired path.
+- Make the environment dynamic to test the robot's performance, allowing the robot to perform a real surveillance task, and giving alarm signals every time a moving entity is detected.
+- Define the model of the robot more realistically, maybe using an existing model already implemented by developers that could be used also in real life.
 - Provide a real battery to the robot. In this way, it could be possible to implement a charging action once the battery is low.
-- Create a simulation environment in which the robot can be tested to see the correctness of the algorithms and test its possibilities in different maps, trying also on outdoor environments.
+- Change the controller of the robot from a `Planar Move` controller to a more realistic one, e.g. a `Skid Drive` controller.
 
 ---
 
