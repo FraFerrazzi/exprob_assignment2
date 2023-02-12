@@ -120,6 +120,7 @@ During the development of the project, some simplified assumptions were done to 
  - When the battery status becomes low, the robot reaches the charging location even if it is not reachable at the moment.
  - All the locations inside the map are set to be URGENT when the program is launched, except for the initial location 'E'. The assumption is that the robot has not moved in a long time, therefore has not visited any location for a period longer than the threshold.
  - All the aruco markers present in the environment are located in the initial room where the robot spawns. Using the information coming from these markers is possible to obtain the full representation and every information concerning the environment. 
+ - The color defining the environment, i.e. walls and blocks, was changed to white. This allows easier detection of the aruco markers.
  
 ## Limitations
 
@@ -217,7 +218,7 @@ The functioning of the program is explained below, using also some explicative d
 
 The first diagram shows the state machine implemented in the code. The figure helps to understand the logic of the project:
 
-
+![StateDiagram](https://user-images.githubusercontent.com/91314392/218321874-0ef1d6cf-ff24-4270-a734-4b2289e8e759.png)
 
 The state machine is composed of seven states, which are:
 - `Build World`: state in which the Tbox of the ontology is loaded and then manipulated to create the desired environment according to the request. This state builds the Abox of the ontology. It can be possible to save the ontology for debugging purposes by uncommenting a few lines of code in the `state_machine_helper.py` script (lines: 282-283).
@@ -231,34 +232,43 @@ The state machine is composed of seven states, which are:
 
 In the following image the component diagram is reported:
 
+![ComponentDiagram](https://user-images.githubusercontent.com/91314392/218321900-76f5e139-15c3-4822-b1ef-36b1feac87b8.png)
 
-
-As shown in the diagram, there are four nodes implemented for the software architecture, plus an additional node (`ARMOR`) which was coded by the [EmaroLab](https://github.com/EmaroLab) group. \ 
-The latter node is essential to guarantee the communication between the ontology, developed with the software [Protèjè](https://protege.stanford.edu), and the ROS scripts created for this project. \
+As shown in the diagram, there are five nodes implemented for the software architecture, plus additional nodes active, which are:
+- `ARMOR`: which was coded by the [EmaroLab](https://github.com/EmaroLab) group, used to update and query the ontology. 
+- `gazebo`: ROS simulation environment.
+- `move_base`: Action server used to plan and control the robot for reaching a desired goal described by Cartesian coordinates.
+- `slam_gmapping`: Simultaneous localization and mapping algorithm.
 The other scripts are briefly described below:
-- `state_machine.py`: as can be seen in the component diagram, this node is the core of the whole architecture. Every other node later explained communicates with this script to ensure the correct behavior of the software. In this node, the final state machine of the project is implemented, which initializes and manages the earlier mentioned states: `Build World`, `Reasoner`, `Planner`, `Controller`, `Surveillance`, `Reach Charge`, and `Charge`. To support this node, a helper class was created, which is present in the `state_machine_helper.py` node that implements some methods called inside the `state_machine.py`.
+- `state_machine.py`: as can be seen in the component diagram, this node is the core of the whole architecture. Almost every node in the architecture communicates with this script to ensure the correct behavior of the software. In this node, the final state machine of the project is implemented, which initializes and manages the earlier mentioned states: `Build World`, `Reasoner`, `Motion`, `Surveillance`, `Reach Charge`, and `Charge`. To support this node, a helper class was created, which is present in the `state_machine_helper.py` node that implements some methods called inside the `state_machine.py`.
 - `robot_battery_state.py`: this node is responsible for managing the robot's battery level. It can give a battery low signal in two ways: randomly after a delay, manually waiting for the user's input. When the battery becomes low, a service is called to recharge the battery which is also implemented in this node. The communication with the `state_machine.py` node is possible thanks to the `SetBool.srv` standard service.
-- `planner.py`: it is a node that, given the current position and the target position, returns a path of random via points. It is not an actual planner since the path has no physical meaning but it is just done to waste time. Communication with the `state_machine.py` node is possible thanks to the `Plan.action` action service.
-- `controller.py`: it is a node that, given the path of via points created by the planner, simulates the motion of the robot based on a random delay between each point. It is not an actual controller since it does not control the movement of the robot but it is just done to waste time. Communication with the `state_machine.py` node is possible thanks to the `Control.action` action service.
+- `aruco_detection.cpp`: This is a client node used to detect the aruco markers placed in the initial location. Every time a new ID belonging to a marker is detected, it is sent to the `marker_server.cpp` and its location's information are retrieved. The same information is sent to the `state_machine.py`, later used to update the ontology. When all the markers have been detected, a request is sent to the `move_cam.cpp`. When a response is received this node is shut down.
+- `move_cam.cpp`: this node allows the motion of the arm of the robot. The base link is rotated of 360 degrees meanwhile the camera is tilted downwards and upwards to detect all the markers in the initial location. When all of them are detected, a request from the `aruco_detection.cpp` arrives. The arm is moved to the home position and the node gets shut down.
+- `marker_server.cpp`: it is a node implemented by Professor [Recchiuto](https://github.com/CarmineD8). It is used to retrieve the information of a specific location corresponding to an ID coming from an aruco marker.
 
 For a better overview of the scripts, I suggest going back to the beginning of this README file and checking the Sphinx documentation. \
 The nodes `robot_battery_state.py` and `marker_server.cpp` were previously implemented by Professor [Buoncompagni](https://github.com/buoncubi), foundable in the [arch_skeleton](https://github.com/buoncubi/arch_skeleton) repository, and Professor [Recchiuto](https://github.com/CarmineD8). \
-I have made few changes to the `robot_battery_state.py` script to better fit the current software architecture.
+I have made a few changes to the `robot_battery_state.py` script to better fit the current software architecture.
 
 ### Sequence diagram
 
 The state diagram focuses on the timing of the communication between the different nodes. \
-The beginning corresponds to the instant in which the software architecture is launched. The diagram is shown the case in which `battery_low = False` for one full execution cycle and becomes `battery_low = True` after the `state_machine.py` retrieves from the ARMOR service the information regarding the new location and the updated timestamp.
+The beginning corresponds to the instant in which the software architecture is launched. The diagram is shown the case in which `battery_low = False` for one full execution cycle and becomes `battery_low = True` after the `Surveillance` state.
 
+![SequenceDiagram](https://user-images.githubusercontent.com/91314392/218325703-69d63953-d1b8-4395-975d-18a54dabfa28.png)
 
-
-The first action done during execution is creating the Abox of the ontology, achieved by the node `state_machine.py` which sends some requests to the ARMOR service and waits until the environment is correctly created. \
+As soon as the architecture is launched, every node shown in the diagram starts running. \
+For the whole simulation time, `gazebo` keeps sending `/scan` and `/tf` information to the `slam_gmapping` algorithm to update the map and allow the robot to understand its surroundings. \
+At the same time the `joint state` are sent to the `move_cam.cpp` to get the state of the robot arm's joints and allow them to move thanks to the `joint command`. This action is done recursively until a request from the `aruco_detection.cpp` is received. \
+Also, `aruco_detection.cpp` acquires `camera image` from `gazebo` and processes them to acquire aruco markers. When markers are detected, the `marker ID` is sent to the `marker_server.cpp` and the environmental information are retrieved. Every time this happens, the received data is sent to the `state_machine.py` which will be used later on to build the ontology of the environment. \
+As soon as all markers have been detected, the `Aruco detection` phase ends and the `Build map` starts.
+The first action of the `Build map` phase is to load the ontology and create its Abox, achieved by the node `state_machine.py` which sends some requests to the ARMOR service and waits until the environment is correctly created. \
+At this point, the `Surveillance behavior` starts. \
 When the world is ready, the `state_machine.py` node queries the ontology to retrieve essential information regarding the location status (i.e. URGENT, ROOM, CORRIDOR, LOCATION) of the reachable room to allow the reasoner method to implement the surveillance policy of the robot. \
-Once the next location is chosen, the `state_machine.py` sends a request to the `planner.py` giving the coordinates of the current position of the robot and the next position. The response is the path composed of via points to go from the current to the next location. \
-At this point, the `controller.py` makes sure that the location will be reached. The request is sent by the `state_machine.py`, which is the path provided by the planner, and the response is the target location once the robot reaches it. \
-The `state_machine.py` queries again the ontology to update the new position of the robot and to update the timestamp of the location and of the robot itself. \
-The sequence of the loop is always the same until a `battery_low = True` signal is issued. When this happens, the robot gets to the charging location by sending a request to the `planner.py` and `controller.py` in the same way described above but imposing the charging location as the next location. \
-Once the robot is ready to charge itself, a charging request is sent to the `robot_battery_state.py` node, which is the same one that published the `battery_low` signal. When the robot is fully charged, the response setting the `battery_low = False` is received by the `state_machine.py`
+Once the next location is chosen, the `state_machine.py` sends the `goal coordinates` to `move_base` to reach the target. As soon as the action is completed the `state_machine.py` queries again the ontology to update the new position of the robot and to update the timestamp of the location and of the robot itself. \
+The sequence of this phase is always the same until a `battery_low = True` signal is issued. When this happens, the robot gets to the charging location thanks to `move_base` in the same way described above but imposing the charging location as the goal location. \
+Once the robot is ready to charge itself, a charging request is sent to the `robot_battery_state.py` node, which is the same one that published the `battery_low` signal. When the robot is fully charged, the response setting the `battery_low = False` is received by the `state_machine.py`. \
+As soon as the battery is full, the `Surveillance behavior` starts again from the reasoning of the ontology and the robot stays in this phase until a new `battery_low = True` signal is issued.
 
 ---
 
