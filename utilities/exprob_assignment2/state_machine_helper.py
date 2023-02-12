@@ -233,15 +233,11 @@ class Helper:
 		self.markers_detected = self.markers_detected + 1
 		if self.markers_detected == anm.MARKERS_NUMBER:
 			# Debug
-			log_msg = f'############################################'
-			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'ROOM:\n{self._rooms}'
-			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'COORDINATES:\n{self._rooms_coord}'
-			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'CONNCETIONS:\n{self._connections}'
-			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'############################################'
+			log_msg = (f'\n#######################################\n'
+				   f'ROOM:\n{self._rooms}\n'
+				   f'COORDINATES:\n{self._rooms_coord}\n'
+			           #f'CONNCETIONS:\n{self._connections}' # DEBUG
+				   f'#######################################')
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.aruco_detected = True     
 		return WorldInitResponse(status = True)
@@ -282,7 +278,12 @@ class Helper:
 		for con in connections_number:
 			ARGS = ['hasDoor', self._connections[con][0], self._connections[con][1]]
 			ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)
-			print(self._connections[con][0], self._connections[con][1])	
+			#print(self._connections[con][0], self._connections[con][1]) # DEBUG
+		# NEXT FOUR LINES ARE DONE JUST TO CHECK
+		#ARGS = ['hasDoor', 'C1', 'D1']
+		#ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)
+		#ARGS = ['hasDoor', 'C1', 'D2']
+		#ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)	
 		# Disjoint rooms and doors
 		ARGS = self._rooms + self._doors + ['Robot1']
 		ontology_manager('DISJOINT', 'IND', '', ARGS)
@@ -290,7 +291,7 @@ class Helper:
 		ARGS = ['isIn', 'Robot1', self.charge_loc]
 		ontology_manager('ADD', 'OBJECTPROP', 'IND' , ARGS)
 		# Get a time in the past (before the timestamp of the robot)
-		self.timer_now = str(int(1000000000)) # This is done to make every room URGENT at the beginning  
+		self.timer_now = str(int(1000000000)) # Make every room URGENT at the beginning  
 		# Start the timestamp in every location to retrieve when a location becomes urgent
 		for i in rooms_number:
 			ARGS = ['visitedAt', self._rooms[i], 'Long', self.timer_now]
@@ -306,9 +307,9 @@ class Helper:
 		ARGS = ['visitedAt', self.charge_loc, 'Long', self.timer_now, last_location[0]]
 		ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
 		# Save ontology for DEBUG purposes
-		#ARGS = [ONTOLOGY_FILE_PATH_DEBUG] # <--- uncomment this line for ontology debug
-		#ontology_manager('SAVE', '', '', ARGS) # <--- uncomment this line for ontology debug
-		log_msg = f'§§§@@@ MAP HAS BEEN GENERATED @@@§§§\n\n'
+		ARGS = [ONTOLOGY_FILE_PATH_DEBUG] # <--- uncomment this line for ontology debug
+		ontology_manager('SAVE', '', '', ARGS) # <--- uncomment this line for ontology debug
+		log_msg = f'\n###§§§@@@ MAP HAS BEEN GENERATED @@@§§§###\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Before continuing make the robot rotate on itself to understand the sorroundings
 		self.explore_init_room() 
@@ -337,7 +338,7 @@ class Helper:
 		cmd.angular.z = -1.6
 		# start the timer
 		start_time = rospy.get_time()
-		log_msg = f'Rotate around a bit to explore!\n\n'
+		log_msg = f'\nRotate around to explore!\n\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Run the loop for six seconds to allow the ROBOT to undertand its sorroundings
 		while rospy.get_time() - start_time < 9:

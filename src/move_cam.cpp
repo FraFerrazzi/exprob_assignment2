@@ -65,8 +65,10 @@ public:
         ROS_INFO("Move the arm until markers have been detected!\n");
         // Loop until all markers have been detected
         while(move_arm){
+            ROS_INFO("TILTING THE CAMERA!\n");
             // Rotate the base joint
             rotate_camera_joint(move_cam_pub);
+            ROS_INFO("ROTATE THE BASE!\n");
             // Rotate the camera joint
             rotate_base_joint(move_base_pub);
             // Make the camera go up or down
@@ -204,7 +206,7 @@ public:
         move_arm = false;
         // Get the request of the client
         req.done;
-        ROS_INFO("ALL THE MARKERS HAVE BEEN DETECTED\n\nArm is going to home position!\n");
+        ROS_INFO("\n\n##############################\nALL THE MARKERS DETECTED\n\nArm is going to home position!\n##############################");
         // Make both camera and base joints go to their home position
         move_to_surv_pos(move_base_pub, move_cam_pub);
         // Send the response to the client

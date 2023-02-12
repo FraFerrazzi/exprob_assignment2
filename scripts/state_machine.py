@@ -98,7 +98,7 @@ class BuildWorld(smach.State):
 			TRANS_WORLD_DONE: is the transition to go from the BUILDWORLD state to the REASONER state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state BUILD WORLD ############\n'
+		log_msg = f'\n\n################# Executing state BUILD WORLD #################\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG)) 
 		r = rospy.Rate(10)
 		while not self._helper.aruco_done():
@@ -148,7 +148,7 @@ class Charge(smach.State):
 			TRANS_BATTERY_OK: is the transition to go from the CHARGE state to the REASONER state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state CHARGE ############\n'
+		log_msg = f'\n\n################# Executing state CHARGE #################\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.recharge_srv()
 		while not rospy.is_shutdown():
@@ -194,7 +194,7 @@ class ReachCharge(smach.State):
 			TRANS_CHARGE_ON: is the transition to go from the REACHCHARGE state to the CHARGE state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state REACH CHARGE ############\n'
+		log_msg = f'\n\n################# Executing state REACH CHARGE #################\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.go_to_charge()
 		while not rospy.is_shutdown():
@@ -242,10 +242,10 @@ class Reasoner(smach.State):
 			TRANS_INFO_DONE: is the transition to go from the REASONER state to the MOTION state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state REASONER ############\n'
+		log_msg = f'\n\n################# Executing state REASONER #################\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		goal_location = self._helper.reason()
-		log_msg = f'The next location that will be reached is: {goal_location}\n\n'
+		log_msg = f'NEXT GOAL: {goal_location}\n\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		while not rospy.is_shutdown():
 			self._helper.mutex.acquire()
@@ -298,7 +298,7 @@ class Motion(smach.State):
 			TRANS_CHECK_LOC: is the transition to go from the MOTION state to the SURVEILLANCE state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state MOTION ############\n'
+		log_msg = f'\n\n################# Executing state MOTION #################\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.go_to_goal()
 		while not rospy.is_shutdown():
@@ -351,7 +351,7 @@ class Surveillance(smach.State):
 			TRANS_CHECK_DONE: is the transition to go from the SURVEILLANCE state to the REASONER state.
 		
 		"""
-		log_msg = f'\n\n############ Executing state SURVEILLANCE ############\n'
+		log_msg = f'\n\n################# Executing state SURVEILLANCE #################\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self._helper.do_surveillance()
 		while not rospy.is_shutdown():
