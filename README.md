@@ -72,7 +72,7 @@ When the battery of the robot is low, it goes to the charging station and waits 
 
 The environment is characterized by: 4 rooms, 3 corridors, and 7 doors. The following image shows the environment:
 
-
+<img width="900" alt="Environment" src="https://user-images.githubusercontent.com/91314392/218328770-f5aaae53-38c5-4afb-9647-6c60660ac8e0.png">
 
 The difference between rooms and corridors is that a corridor has more than one door, allowing communication with multiple rooms. \
 The ontology is defined using the software [Protèjè](https://protege.stanford.edu) and the [Armor](https://github.com/EmaroLab/armor) ontology manager. This allows having knowledge regarding the structure and information of the environment also in the code. 
@@ -83,7 +83,7 @@ The robot used in this project is a four-wheeled mobile robot. The robot is equi
 Also, the robot has an arm with an RGBD camera mounted at the top. The arm can rotate around itself thanks to a continuous joint placed at the base. Also, the camera, used for surveillance and detection purposes, can tilt thanks to a revolute joint which allows getting a better view of the surroundings. \
 The robot is reported below:
 
-
+<img width="500" alt="RobotModel" src="https://user-images.githubusercontent.com/91314392/218328774-9ee5c2a4-2c1a-45d7-94cc-37f690e1d171.png">
 
 ### Behavior
 
