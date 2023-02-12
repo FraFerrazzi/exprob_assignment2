@@ -233,11 +233,11 @@ class Helper:
 		self.markers_detected = self.markers_detected + 1
 		if self.markers_detected == anm.MARKERS_NUMBER:
 			# Debug
-			log_msg = (f'\n#######################################\n'
+			log_msg = (f'\n##############################################################\n'
 				   f'ROOM:\n{self._rooms}\n'
 				   f'COORDINATES:\n{self._rooms_coord}\n'
-			           #f'CONNCETIONS:\n{self._connections}' # DEBUG
-				   f'#######################################')
+			           f'CONNCETIONS:\n{self._connections}\n' 
+				   f'##############################################################\n')
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.aruco_detected = True     
 		return WorldInitResponse(status = True)
@@ -307,8 +307,8 @@ class Helper:
 		ARGS = ['visitedAt', self.charge_loc, 'Long', self.timer_now, last_location[0]]
 		ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
 		# Save ontology for DEBUG purposes
-		ARGS = [ONTOLOGY_FILE_PATH_DEBUG] # <--- uncomment this line for ontology debug
-		ontology_manager('SAVE', '', '', ARGS) # <--- uncomment this line for ontology debug
+		#ARGS = [ONTOLOGY_FILE_PATH_DEBUG] # <--- uncomment this line for ontology debug
+		#ontology_manager('SAVE', '', '', ARGS) # <--- uncomment this line for ontology debug
 		log_msg = f'\n###§§§@@@ MAP HAS BEEN GENERATED @@@§§§###\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Before continuing make the robot rotate on itself to understand the sorroundings
@@ -391,7 +391,7 @@ class Helper:
 		can_reach = ontology_manager('QUERY', 'OBJECTPROP', 'IND', ARGS)
 		can_reach = ontology_format(can_reach, 32, -1)
 		random.shuffle(can_reach) # Make the choice randomic
-		log_msg = f'The Robot can reach:\n{can_reach}'
+		log_msg = f'\nREACHABLE LOCATIONS:\n{can_reach}'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Retrieve the status of the reachable locations
 		loc_status = []
@@ -401,12 +401,13 @@ class Helper:
 			loc_status = ontology_manager('QUERY', 'CLASS', 'IND', ARGS)  
 			loc_status = ontology_format(loc_status, 32, -1)
 			all_status.append(loc_status)
-		log_msg = f'Locations status:\n{all_status}\n'
-		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Check the status of the room (i.e. ROOM, CORRIDOR, URGENT)
 		urgent_loc = []
 		possible_corridor = []
 		for sta in range(0, len(all_status)):
+			# Done since ARMOR does not give me that a location is a corridor (UNKNOWN)
+			if can_reach[sta] == 'C1' or can_reach[sta] == 'C2' or can_reach[sta] == 'E':
+				possible_corridor.append(can_reach[sta])
 			for urg in range(0, len(all_status[sta])):
 				# If location is urgent and it is reachable
 				if all_status[sta][urg] == 'URGENT':
@@ -416,18 +417,19 @@ class Helper:
 					possible_corridor.append(can_reach[sta])
 		# Retrieve the next location taht will be checked by the robot
 		if len(urgent_loc) == 0:
-			log_msg = f'NO URGENT LOCATIONS'
+			log_msg = f'\nNO URGENT LOCATIONS'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			if len(possible_corridor) == 0:
-				log_msg = f'NO REACHABLE CORRIDORS'
+				log_msg = f'\nNO REACHABLE CORRIDORS\nCHOOSE A RANDOMIC REACHABLE ROOM\n'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 				self._next_goal = can_reach # take the reachable rooms
 			else:
-				log_msg = f'CORRIDORS:\n{possible_corridor}'
-				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 				self._next_goal = possible_corridor # take the reachable corridors
 		else:
-			log_msg = f'URGENT:\n{urgent_loc}'
+			if (possible_corridor) != 0:
+				log_msg = f'\nCORRIDORS:\n{possible_corridor}'
+				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
+			log_msg = f'\nURGENT:\n{urgent_loc}'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self._next_goal = urgent_loc # take the urgent rooms
 		# If the next goal is a list, take only the first one
@@ -471,12 +473,12 @@ class Helper:
 		self.reset_var()
 		# Set the next location to be the charging station
 		self._next_goal = self.charge_loc
-		log_msg = f'Battery of the robot low!\nThe ROBOT is going to the CHARGING STATION'
+		log_msg = f'\nBattery of the robot low!\nThe ROBOT is going to the CHARGING STATION'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.go_to_goal()
 		while self.move_cli.get_state() != DONE: # Loops until the plan action service is Not DONE
 			self.rate.sleep() # Wate time
-		log_msg = f'The ROBOT arrived at the CHARGING STATION'
+		log_msg = f'\nThe ROBOT arrived at the CHARGING STATION'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.charge_reached = True   # Set to True only the one involved in the state
 		
@@ -551,7 +553,7 @@ class Helper:
 		request = SetBoolRequest()
 		request.data = True
 		response = self.recharge_cli(request)
-		log_msg = f'The Robot has been recharged! Ready for action!!\n\n'
+		log_msg = f'\nThe Robot has been recharged! Ready for action!!\n\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.battery_low = False
 	
@@ -578,7 +580,7 @@ class Helper:
 		except:
 			log_msg = f'The Goal cannot be found\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-		log_msg = f'The ROBOT is planning to go to:\nRoom: {self._rooms[room_index]}\nCoordinates: ({self._rooms_coord[room_index][0]},{self._rooms_coord[room_index][1]})\n'
+		log_msg = f'\nThe ROBOT is planning to go to:\nRoom: {self._rooms[room_index]}\nCoordinates: ({self._rooms_coord[room_index][0]},{self._rooms_coord[room_index][1]})\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		goal = MoveBaseGoal()
 		# Set the desired goal that we want to reach
@@ -606,7 +608,7 @@ class Helper:
 		"""
 		# Execute only when the plan action service is done
 		if self.move_cli.get_state() == DONE and self.battery_low == False:
-			log_msg = f'The ROBOT has arrived to the destination'
+			log_msg = f'\nThe ROBOT has arrived to the destination'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			# Update the position of the ROBOT in the ontology
 			ARGS = ['isIn', 'Robot1', self._next_goal, self._prev_goal]
@@ -659,7 +661,7 @@ class Helper:
 			self: instance of the current class.
 		
 		"""
-		log_msg = f'Cancel the previous goal\n\n'
+		log_msg = f'Cancel goal\n\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Cancel the goal
 		self.move_cli.cancel_all_goals()
@@ -698,7 +700,7 @@ class Helper:
 		# Reset the boolean variables
 		self.reset_var()
 		# Surveillance task
-		log_msg = f'The ROBOT starts surveilling room: {self._next_goal}\n'
+		log_msg = f'\nThe ROBOT starts surveilling room: {self._next_goal}\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		joint_angle = 0
 		while self.battery_low == False and joint_angle <= 3.1: # If bettery low there won't be surveillance task
@@ -710,11 +712,11 @@ class Helper:
 		joint_angle = 0
 		self.pub_base_joint.publish(joint_angle)
 		if self.battery_low == False:
-			log_msg = f'The robot checked location: {self._next_goal}\n\n'
+			log_msg = f'\nThe robot checked location: {self._next_goal}\n\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.check_completed = True  # Set to True only the one involved in the state
 		else:
-			log_msg = f'Stop surveilling! Battery low!\n\n'
+			log_msg = f'\nStop surveilling! Battery low!\n\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self.check_completed = False  # Set to False since action was not completed
 	
