@@ -20,14 +20,15 @@ A short video shows the execution of the software architecture:
 
 
 
-In the main terminal, it is visible the execution and the screen output of the MoveBase and Gmapping algorithms. \
-On the top right, the state_machine.py node implements the Final State Machine and shows every transition from one state to another to achieve the desired behavior of the program. The choice was to keep the User Interface not too complex and with few outputs for each state. This was done to avoid too much information on the screen that could confuse the reader. In general, the following steps are shown: the current state that is being executed, the most important actions regarding the state, and the transition to the next state. \
-On the right, the other three xterm windows appear once the program is launched. \
-The window at the top is the aruco_detection.cpp which shows when an aruco marker is detected and every information related to it. \
-The one in the middle represents the move_cam.cpp node and shows the motion of the arm placed on the robot. \
-As soon as every marker gets detected, these two nodes are shut down. \
-The one at the bottom is the robot_battery_state.py and is responsible for generating the battery_low signal. It manages also the charging action of the robot when the battery is low. \
-This video reports the execution of the program when the surveillance2_random.launch is used. \
+In the main terminal, it is visible the execution and the screen output of the `MoveBase` and `Gmapping` algorithms. \
+The main focus goes to the `gazebo` simulator, which is placed in the middle. \
+On the top right, the `state_machine.py` node implements the Final State Machine and shows every transition from one state to another to achieve the desired behavior of the program. The choice was to keep the User Interface not too complex and with few outputs for each state. This was done to avoid too much information on the screen that could confuse the reader. In general, the following steps are shown: the current state that is being executed, the most important actions regarding the state, and the transition to the next state. \
+On the left, the other three xterm windows appear once the program is launched. \
+The window at the top is the `aruco_detection.cpp` which shows when an aruco marker is detected and every information related to it. \
+The one in the middle represents the `move_cam.cpp` node and shows the motion of the arm placed on the robot. \
+As soon as every marker gets detected, these two nodes are shut down. Now, the `Rviz` screen is partially visible, to show mainly what the robot sees through its camera. \
+The one at the bottom is the `robot_battery_state.py` and is responsible for generating the battery_low signal. It manages also the charging action of the robot when the battery is low. \
+This video reports the execution of the program when the surveillance2_manual.launch is used, therefore the user must decite when the low battery signal is issued by typing `l` on the `robot_battery_state.py` node. \
 The only difference concerning the surveillance2_manual.launch is that the GUI of the robot_battery_state node is different compared to the surveillance2_random.launch, and the battery_low signal is randomly generated using the latter mentioned launch 
 
 ## How to run
