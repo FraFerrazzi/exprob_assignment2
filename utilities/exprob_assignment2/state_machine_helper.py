@@ -278,13 +278,8 @@ class Helper:
 		for con in connections_number:
 			ARGS = ['hasDoor', self._connections[con][0], self._connections[con][1]]
 			ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)
-			#print(self._connections[con][0], self._connections[con][1]) # DEBUG
-		# NEXT FOUR LINES ARE DONE JUST TO CHECK
-		#ARGS = ['hasDoor', 'C1', 'D1']
-		#ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)
-		#ARGS = ['hasDoor', 'C1', 'D2']
-		#ontology_manager('ADD', 'OBJECTPROP', 'IND', ARGS)	
-		# Disjoint rooms and doors
+			self._doors.append(self._connections[con][1])
+		# Disjoint rooms, doors and robot
 		ARGS = self._rooms + self._doors + ['Robot1']
 		ontology_manager('DISJOINT', 'IND', '', ARGS)
 		# State the robot initial position
@@ -391,7 +386,7 @@ class Helper:
 		can_reach = ontology_manager('QUERY', 'OBJECTPROP', 'IND', ARGS)
 		can_reach = ontology_format(can_reach, 32, -1)
 		random.shuffle(can_reach) # Make the choice randomic
-		log_msg = f'\nREACHABLE LOCATIONS:\n{can_reach}'
+		log_msg = f'\nREACHABLE LOCATIONS: {can_reach}\n'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		# Retrieve the status of the reachable locations
 		loc_status = []
@@ -400,14 +395,13 @@ class Helper:
 			ARGS = [can_reach[loc], 'false']
 			loc_status = ontology_manager('QUERY', 'CLASS', 'IND', ARGS)  
 			loc_status = ontology_format(loc_status, 32, -1)
+			log_msg = f'\nROOM: {can_reach[loc]} -> STATUS: {loc_status}\n'
+			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			all_status.append(loc_status)
 		# Check the status of the room (i.e. ROOM, CORRIDOR, URGENT)
 		urgent_loc = []
 		possible_corridor = []
 		for sta in range(0, len(all_status)):
-			# Done since ARMOR does not give me that a location is a corridor (UNKNOWN)
-			if can_reach[sta] == 'C1' or can_reach[sta] == 'C2' or can_reach[sta] == 'E':
-				possible_corridor.append(can_reach[sta])
 			for urg in range(0, len(all_status[sta])):
 				# If location is urgent and it is reachable
 				if all_status[sta][urg] == 'URGENT':
@@ -417,19 +411,18 @@ class Helper:
 					possible_corridor.append(can_reach[sta])
 		# Retrieve the next location taht will be checked by the robot
 		if len(urgent_loc) == 0:
-			log_msg = f'\nNO URGENT LOCATIONS'
+			log_msg = f'\nNO URGENT LOCATIONS\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			if len(possible_corridor) == 0:
 				log_msg = f'\nNO REACHABLE CORRIDORS\nCHOOSE A RANDOMIC REACHABLE ROOM\n'
 				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 				self._next_goal = can_reach # take the reachable rooms
 			else:
+				log_msg = f'\nCORRIDORS: {possible_corridor}\n'
+				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 				self._next_goal = possible_corridor # take the reachable corridors
 		else:
-			if (possible_corridor) != 0:
-				log_msg = f'\nCORRIDORS:\n{possible_corridor}'
-				rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
-			log_msg = f'\nURGENT:\n{urgent_loc}'
+			log_msg = f'\nURGENT: {urgent_loc}\n'
 			rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 			self._next_goal = urgent_loc # take the urgent rooms
 		# If the next goal is a list, take only the first one

@@ -226,7 +226,7 @@
   </link>
   
   <joint name="camera_joint" type="revolute">
-	<axis rpy="0 0 0" xyz="1 0 0" />
+	<axis rpy="0 0 0" xyz="0 1 0" />
 	<origin xyz="0 0 0.725" rpy="0 0 0"/>
 	<parent link="arm_link1"/>
 	<child link="camera_link"/>
