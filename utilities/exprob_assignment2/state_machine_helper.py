@@ -471,6 +471,29 @@ class Helper:
 		self.go_to_goal()
 		while self.move_cli.get_state() != DONE: # Loops until the plan action service is Not DONE
 			self.rate.sleep() # Wate time
+		# Update the position of the ROBOT in the ontology
+		ARGS = ['isIn', 'Robot1', self._next_goal, self._prev_goal]
+		ontology_manager('REPLACE', 'OBJECTPROP', 'IND' , ARGS)
+		self._prev_goal = self._next_goal
+		# Reason about the onoloy
+		ARGS = ['']
+		ontology_manager('REASON', '', '', ARGS)
+		# Retreive the last time the robot moved
+		ARGS = ['now', 'Robot1']
+		last_motion = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
+		last_motion = ontology_format(last_motion, 1, 11)
+		# Retreive the last time a specific location has been visited
+		ARGS = ['visitedAt', self._next_goal]
+		last_location = ontology_manager('QUERY', 'DATAPROP', 'IND', ARGS)
+		last_location = ontology_format(last_location, 1, 11) 
+		# Update the time
+		self.timer_now = str(int(time.time())) 
+		# Update the timestamp since the robot moved
+		ARGS = ['now', 'Robot1', 'Long', self.timer_now, last_motion[0]]
+		ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
+		# Update the timestamp since the robot visited the location
+		ARGS = ['visitedAt', self._next_goal, 'Long', self.timer_now, last_location[0]]
+		ontology_manager('REPLACE', 'DATAPROP', 'IND', ARGS)
 		log_msg = f'\nThe ROBOT arrived at the CHARGING STATION'
 		rospy.loginfo(anm.tag_log(log_msg, LOG_TAG))
 		self.charge_reached = True   # Set to True only the one involved in the state

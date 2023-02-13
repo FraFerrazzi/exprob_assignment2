@@ -61,7 +61,7 @@ public:
     	std::cout << "#######################################\nMOVE CAMERA node correctly launched\n#######################################\n\n"; 
         move_cam_pub = nh_.advertise<std_msgs::Float64>("/robot/joint2_position_controller/command", 10);
         move_base_pub = nh_.advertise<std_msgs::Float64>("/robot/joint1_position_controller/command", 10);
-        motion_srv = nh_.advertiseService("/arm_info", &MoveJoint::motionCallback, this); 
+        motion_srv = nh_.advertiseService("/arm_info", &MoveJoint::motionCallback, this);
         ROS_INFO("Move the arm until markers have been detected!\n");
         // Loop until all markers have been detected
         while(move_arm){
