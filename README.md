@@ -18,7 +18,7 @@ The robot moves autonomously in the environment until the battery state becomes 
 The program interacts with an ontology to retrieve essential information to achieve the desired behavior. \
 A short video shows the execution of the software architecture:
 
-
+https://user-images.githubusercontent.com/91314392/218448819-60b942a7-d7c8-4355-968e-f29de27f22cf.mp4
 
 In the main terminal, it is visible the execution and the screen output of the `MoveBase` and `Gmapping` algorithms. \
 The main focus goes to the `gazebo` simulator, which is placed in the middle. \
@@ -56,7 +56,7 @@ Use the following command to launch the software with randomized stimulus for th
 roslaunch exprob_assignemnt1 surveillance2_random.launch
 ```
 
-Four new terminal windows are going to be opened, making a total of five open windows when the program gets launched. \
+Four new `xterm` windows are going to be opened, making a total of five open windows when the program gets launched. \
 One corresponds to the `state_machine.py` GUI which gives visual feedback on what is happening during the execution of the software architecture. One shows a user interface regarding the battery level, controlled by the `robot_battery_state.py` node, which stimuli can be both random or manual depending on the launch file used to run the project.
 The other two display the behavior of the `aruco_detection.cpp` and the `move_cam.cpp`. The former allows seeing when a marker is detected and its information, whereas the latter states the correct functioning of the arm's motion. \
 The fifth window regards the main terminal where warnings coming from `MoveBase` and `Gmapping` are printed.
@@ -84,7 +84,7 @@ The robot used in this project is a four-wheeled mobile robot. The robot is equi
 Also, the robot has an arm with an RGBD camera mounted at the top. The arm can rotate around itself thanks to a continuous joint placed at the base. Also, the camera, used for surveillance and detection purposes, can tilt thanks to a revolute joint which allows getting a better view of the surroundings. \
 The robot is reported below:
 
-<img width="500" alt="RobotModel" src="https://user-images.githubusercontent.com/91314392/218328774-9ee5c2a4-2c1a-45d7-94cc-37f690e1d171.png">
+<img width="600" alt="RobotModel" src="https://user-images.githubusercontent.com/91314392/218328774-9ee5c2a4-2c1a-45d7-94cc-37f690e1d171.png">
 
 ### Behavior
 
